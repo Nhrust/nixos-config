@@ -6,8 +6,17 @@
 #
 # user.conf создаётся пустым при первой установке и больше не трогается
 # при обновлениях. Туда друг кладёт свои настройки.
+#
+# Часть файлов выбирается по settings.profile (laptop/desktop/server):
+#   - hypridle.conf      — разные таймауты idle
+#   - conf/profile.conf  — lid switch для ноута, заглушка для остальных
 # =============================================================================
-{ lib, ... }:
+{ lib, settings, ... }:
+let
+  profile = settings.profile;
+  hypridleSrc = ../dotfiles/hyprland + "/hypridle-${profile}.conf";
+  profileSrc  = ../dotfiles/hyprland/conf + "/profile-${profile}.conf";
+in
 {
   # Главный конфиг — иммутабельный, обновляется через git pull upstream
   xdg.configFile."hypr/hyprland.conf".source = ../dotfiles/hyprland/hyprland.conf;
@@ -24,10 +33,13 @@
   xdg.configFile."hypr/conf/binds.conf".source        = ../dotfiles/hyprland/conf/binds.conf;
   xdg.configFile."hypr/conf/windowrules.conf".source  = ../dotfiles/hyprland/conf/windowrules.conf;
 
+  # Профильный конфиг — выбирается по settings.profile
+  xdg.configFile."hypr/conf/profile.conf".source = profileSrc;
+
   # Сопутствующие конфиги Hyprland
   xdg.configFile."hypr/hyprpaper.conf".source = ../dotfiles/hyprland/hyprpaper.conf;
   xdg.configFile."hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
-  xdg.configFile."hypr/hypridle.conf".source  = ../dotfiles/hyprland/hypridle.conf;
+  xdg.configFile."hypr/hypridle.conf".source  = hypridleSrc;
 
   # ── user.conf: создаётся один раз при первой установке ────────────────────
   # Файл становится обычным mutable файлом — пользователь редактирует свободно,

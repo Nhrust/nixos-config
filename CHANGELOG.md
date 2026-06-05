@@ -2,6 +2,54 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.2] — 2026-06-05
+
+### Added
+- **Профильное поведение idle** — `hypridle.conf` теперь выбирается по
+  `settings.profile`:
+  - `laptop`  → 3 минуты простоя → экран гаснет И сессия лочится
+  - `desktop` → 5 минут простоя → экран гаснет И сессия лочится
+  - `server`  → автоматический idle отключён, ручной lock работает
+- **Закрытие крышки на ноутбуке** — экран гаснет, сессия лочится,
+  но машина НЕ суспендится. Wifi, музыка, фоновая компиляция продолжают
+  работать. Реализовано двумя слоями:
+  - `services.logind.lidSwitch* = "ignore"` в `modules/system/profiles/laptop.nix`
+  - `bindl=,switch:on:Lid Switch,exec,...` в новом `conf/profile-laptop.conf`
+- **Профильные конфиги Hyprland** — новый файл `conf/profile.conf`
+  подключается из главного `hyprland.conf` и автоматически указывает на
+  `conf/profile-{laptop,desktop,server}.conf`.
+
+### Changed
+- `modules/user/ui/hyprland.nix` теперь принимает `settings` в аргументах
+  и собирает source-пути для `hypridle.conf` и `conf/profile.conf`
+  через интерполяцию `settings.profile`.
+
+### Removed
+- Старый общий `modules/user/dotfiles/hyprland/hypridle.conf` удалён —
+  заменён тремя профильными вариантами (`hypridle-{laptop,desktop,server}.conf`).
+
+### Breaking
+Если кто-то из друзей переопределял у себя `hypridle.conf` через
+`custom/<host>.nix` или `~/.config/hypr/user.conf` — поведение не меняется,
+так как `user.conf` подключается последним. Но если был
+`xdg.configFile."hypr/hypridle.conf"` в custom — теперь его источник
+перекрывает выбранный профильный вариант (это и должно быть желаемым).
+
+### Что делать другу при обновлении
+```bash
+cd ~/nixos-config
+git fetch upstream
+git merge upstream/main
+nrs
+```
+После пересборки и нового логина в Hyprland — поведение idle подхватится
+автоматически по `settings.profile`. Для проверки lid switch на ноуте:
+закрой крышку → экран должен погаснуть и появиться lock-screen, но машина
+не уснёт. Имя устройства lid switch можно проверить через `hyprctl devices`
+если экран не гаснет при закрытии (см. комментарий в `conf/profile-laptop.conf`).
+
+---
+
 ## [0.1.1] — 2026-06-05
 
 ### Fixed

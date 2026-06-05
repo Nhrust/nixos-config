@@ -9,11 +9,6 @@
       CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
       CPU_SCALING_GOVERNOR_ON_AC  = "performance";
 
-      # Лимит заряда — продлевает срок службы батареи.
-      # Работает на ThinkPad и некоторых Dell/HP — на остальных просто игнорируется.
-      # Закомментируй если нужен полный заряд.
-      START_CHARGE_THRESH_BAT0 = 75;
-      STOP_CHARGE_THRESH_BAT0  = 80;
     };
   };
 
@@ -24,6 +19,12 @@
     naturalScrolling   = true;
     tapping            = true;
     disableWhileTyping = true;
+  };
+
+  services.logind = {
+    lidSwitch              = "ignore";  # от батареи
+    lidSwitchExternalPower = "ignore";  # от сети
+    lidSwitchDocked        = "ignore";  # в док-станции
   };
 
   environment.systemPackages = with pkgs; [
