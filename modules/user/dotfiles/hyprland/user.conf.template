@@ -1,35 +1,84 @@
 # =============================================================================
-# user.conf — Твои персональные настройки Hyprland
+# ~/.config/hypr/user.conf — Твои личные настройки Hyprland
 # =============================================================================
-# Этот файл создан один раз при первой установке системы и больше не трогается
-# при обновлениях через `git pull upstream`. Редактируй его свободно.
+# Этот файл создаётся при первой установке системы и больше НИКОГДА не
+# трогается обновлениями (git pull / nrs его не перепишут).
 #
-# Он подключается ПОСЛЕ всех модулей из conf/, поэтому переопределяет любые
-# настройки оттуда. Применить изменения: Super+Shift+R или `hyprctl reload`.
+# Подключается ПОСЛЕДНИМ из главного hyprland.conf — переопределяет всё
+# что выше (default бинды, monitor конфиги, env vars, и т.д.).
 #
-# Примеры что можно тут делать:
+# Раскомментируй примеры ниже и адаптируй под себя.
 # =============================================================================
 
-# ── Свои мониторы ──────────────────────────────────────────────────────────
-# monitor=DP-1,2560x1440@144,0x0,1
-# monitor=HDMI-A-1,1920x1080@60,2560x0,1
 
-# ── Свои биндинги ──────────────────────────────────────────────────────────
-# bind = SUPER, T, exec, telegram-desktop
+# ── Свои бинды ─────────────────────────────────────────────────────────────
+# Формат: bind = MODIFIERS, KEY, DISPATCHER, ARGS
+# Список dispatcher'ов: https://wiki.hypr.land/Configuring/Dispatchers/
+
+# Открыть Firefox по Super+B:
 # bind = SUPER, B, exec, firefox
 
-# ── Изменить gaps ──────────────────────────────────────────────────────────
+# Свой скриншот-инструмент:
+# bind = , Print, exec, hyprshot -m region
+
+# Перевесить терминал с Super+T на Super+Return (как Sway):
+# unbind = SUPER, T
+# bind = SUPER, Return, exec, kitty
+
+
+# ── Свои мониторы ──────────────────────────────────────────────────────────
+# Имена мониторов узнать через:  hyprctl monitors
+# Формат: monitor = NAME, RESOLUTION@HZ, POSITION, SCALE
+
+# Внешний 4K-монитор слева, ноутбучный экран справа от него:
+# monitor = DP-1,   3840x2160@60,  0x0,    1.5
+# monitor = eDP-1,  1920x1080@60,  2560x0, 1.0
+
+# Отключить ноутбучный экран когда подключён внешний:
+# monitor = eDP-1, disable
+
+
+# ── Свои переменные окружения ──────────────────────────────────────────────
+# env = LIBVA_DRIVER_NAME, nvidia          # принудительный VA-API через NVIDIA
+# env = GBM_BACKEND, nvidia-drm
+# env = __GLX_VENDOR_LIBRARY_NAME, nvidia
+
+
+# ── Перетереть параметр compositor ─────────────────────────────────────────
+# Например изменить gaps под себя:
 # general {
-#     gaps_in  = 8
-#     gaps_out = 16
+#     gaps_in  = 6
+#     gaps_out = 12
 # }
 
-# ── Свой автозапуск ────────────────────────────────────────────────────────
-# exec-once = nm-applet
-# exec-once = blueman-applet
 
-# ── Свои правила для окон ──────────────────────────────────────────────────
-# windowrulev2 = workspace 2 silent, class:^(firefox)$
-# windowrulev2 = workspace 3 silent, class:^(thunderbird)$
+# ── Свои правила окон ──────────────────────────────────────────────────────
+# Class узнать через:  hyprctl clients
+#
+# Например, открывать Telegram на 8-м воркспейсе:
+# windowrule = workspace 8 silent, class:^(org.telegram.desktop)$
+#
+# Или сделать Spotify плавающим:
+# windowrule = float,  class:^(Spotify)$
+# windowrule = size 1200 800, class:^(Spotify)$
 
-# Документация Hyprland: https://wiki.hyprland.org/
+
+# ── Свои autostart-команды ─────────────────────────────────────────────────
+# exec-once = telegram-desktop
+# exec-once = thunderbird
+# exec-once = nextcloud --background
+
+
+# ── Свои жесты тачпада ─────────────────────────────────────────────────────
+# Поверх дефолтных в input.conf:
+# gestures {
+#     gesture = 4, horizontal, workspace          # 4 пальца — тоже воркспейсы
+#     gesture = 4, up,         dispatcher, fullscreenstate
+# }
+
+
+# ── Документация ────────────────────────────────────────────────────────────
+# Полный референс по опциям:        https://wiki.hypr.land/Configuring/
+# Бинды и dispatcher'ы:              https://wiki.hypr.land/Configuring/Binds/
+# Правила окон:                      https://wiki.hypr.land/Configuring/Window-Rules/
+# Мониторы и сценарии:               https://wiki.hypr.land/Configuring/Monitors/

@@ -50,7 +50,7 @@ nixpkgs.lib.nixosSystem {
     disko.nixosModules.disko
     diskoModule
 
-    # Catppuccin (системный уровень — консоль, плимут и т.д.)
+    # Catppuccin (системный уровень — консоль, plymouth и т.д.)
     catppuccin.nixosModules.catppuccin
 
     # Железо конкретной машины
@@ -59,6 +59,7 @@ nixpkgs.lib.nixosSystem {
     # Фундамент
     ../modules/system/main.nix
     ../modules/system/variables.nix
+    ../modules/system/power-profiles.nix
 
     # UI: сессия, аудио, шрифты
     ../modules/system/ui/session.nix

@@ -1,5 +1,5 @@
 # =============================================================================
-# modules/user/ui/wofi.nix — Launcher (Super+R) + mako (уведомления)
+# modules/user/ui/wofi.nix — Launcher (Super+R)
 # =============================================================================
 { pkgs, ... }:
 {
@@ -8,5 +8,6 @@
   xdg.configFile."wofi/config".source    = ../dotfiles/wofi/config;
   xdg.configFile."wofi/style.css".source = ../dotfiles/wofi/style.css;
 
-  services.mako.enable = true;
+  # mako (уведомления) перенесён в modules/user/ui/notifications.nix
+  # вместе с декларативной конфигурацией и wlogout.
 }

@@ -2,57 +2,92 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.6] — 2026-06-05
+## [0.1.7] — 2026-06-05 (combined)
 
-### Fixed
-- **Громкость не выше 100%** — `XF86AudioRaiseVolume` теперь идёт через
-  скрипт `~/.config/hypr/scripts/volume.sh up`, который использует
-  `wpctl set-volume -l 1.0` (лимит 100%). Плюс `max-volume: 100` в waybar.
-- **Auto-mute при громкости 0** — скрипт `volume.sh down` после понижения
-  проверяет уровень, и если стал 0.00 — выставляет mute. Waybar тогда
-  показывает иконку перечёркнутого динамика, а не "0%".
-- **Иконка mute вместо текста** — в `pulseaudio.format-muted` теперь
-  одна глифа () без слова "muted".
-- **windowrulev2 → windowrule** — Hyprland 0.53+ unified синтаксис, старая
-  `windowrulev2` deprecated. Migrated all 11 правил в `windowrules.conf`.
-  Это должно убрать часть оставшейся error-плашки.
+Большой релиз: Hyprland-полировка + декларативные уведомления + logout-меню +
+node power-profiles-daemon + слой кастомизации с примерами.
 
-### Added
-- **Backlight модуль в waybar** — иконка + процент яркости, колесо мыши
-  крутит ±5%. Модуль показывается только когда есть backlight интерфейс
-  (т.е. на ноутбуках; на десктопах не появится).
-- **Bluetooth модуль в waybar** — иконка состояния (вкл/выкл/подключено).
-  ЛКМ — `blueman-manager`, ПКМ — `rfkill toggle bluetooth`.
-  Если в `settings.bluetooth = false`, модуль покажет "off" и не будет
-  ни на что реагировать.
-- **Кликабельность всех модулей**:
-  - Часы — ЛКМ переключает между коротким/длинным форматом
-  - Backlight — колесо мыши крутит яркость
-  - Громкость — ЛКМ pavucontrol, ПКМ mute, колесо ±5%
-  - Bluetooth — ЛКМ blueman-manager, ПКМ rfkill
-  - Сеть — ЛКМ `~/.config/hypr/scripts/wifi-menu.sh` (выбор WiFi через wofi),
-    ПКМ `nm-connection-editor`
-  - CPU/RAM — ЛКМ открывает btop в kitty
-- **Tooltips** на ховер для всех модулей — детали (полная дата,
-  имя интерфейса, IP, USB battery и т.п.)
-- **WiFi-меню через wofi** — `scripts/wifi-menu.sh` показывает доступные
-  сети с уровнем сигнала и индикатором защиты (🔒/🔓), позволяет
-  подключиться (с запросом пароля если нужно), переключить WiFi off/on,
-  открыть nm-connection-editor.
-- **Volume control скрипт** — `scripts/volume.sh up|down|mute` с capping
-  и auto-mute, описан выше.
-- **`networkmanagerapplet`** добавлен в `modules/user/ui/waybar.nix`,
-  плюс `services.network-manager-applet.enable = true` — даёт системный
-  апплет в трей для подтверждения подключений и быстрых переключений.
+### Added — Hyprland-полировка
+- **`pyprland`** — Python-плагины:
+  - `scratchpads.term` — терминал «quake-style» поверх всего, `Super+\``
+  - `scratchpads.notes` — helix с `~/.notes.md`, `Super+Shift+N`
+  - `smart_gaps` — gaps исчезают когда одно окно на воркспейсе
+  - Конфиг: `modules/user/dotfiles/hyprland/pyprland.toml`
+  - Autostart: `exec-once = pypr` в `autostart.conf`
+- **`hyprshade`** — blue-light filter, бинд `Super+F11` toggle `blue-light-filter`
+- **`wlogout`** — графическое logout-меню (Lock/Logout/Suspend/Hibernate/Reboot/Shutdown),
+  Catppuccin Mocha-стайл, бинд `Ctrl+Alt+Delete`
+  - Заменяет старый опасный `Super+Shift+M = exit`
 
-### Changed
-- **Иконки сети без текста**:
-  - `format-wifi`: " {signalStrength}%" — только глифа + сигнал
-  - `format-ethernet`: "" — только глифа
-  - `format-disconnected`: "" — перечёркнутая
-- **CSS-цвета для состояний** — `#pulseaudio.muted`, `#network.disconnected`,
-  `#bluetooth.disabled` и `.off` стилизованы в серый (Catppuccin overlay0),
-  активные индикаторы остаются базовым text-цветом.
+### Added — Power-profiles-daemon (3-режима для всех машин)
+- `services.power-profiles-daemon` включён через `modules/system/power-profiles.nix`
+- Новые поля в `hosts/_template/settings.nix`:
+  - `powerProfile = null` — `null` авто-выбор по `settings.profile`
+    (laptop→balanced, desktop/server→performance), либо явный
+    `"performance"`/`"balanced"`/`"powersave"`
+  - `batteryChargeLimit = null` — `null` без лимита, или число 1-100 в %
+- Бинды `Super+F1/F2/F3` (performance/balanced/powersave) с уведомлениями
+- Waybar модуль `custom/powerprofile`: иконка текущего профиля, ЛКМ цикл,
+  обновление каждые 5с
+- Скрипт `~/.config/hypr/scripts/powerprofile.sh`: `status` / `cycle` / `tooltip`
+
+### Added — Battery charge limit
+- Кастомный systemd-сервис `battery-charge-limit` пишет порог в
+  `/sys/class/power_supply/BAT*/charge_*_threshold`
+- Активируется только когда `settings.batteryChargeLimit != null`
+- Работает на ThinkPad, некоторых Dell/HP/Asus — где есть sysfs-узел
+- На прочем железе тихо игнорируется
+
+### Added — Декларативный mako
+- `modules/user/ui/notifications.nix` — новый модуль
+- `services.mako.settings` с top-right, 320×110, JetBrainsMono Nerd Font 11,
+  5с обычные / 30с критичные, скруглённые углы
+
+### Added — Декларативный nano
+- `programs.nano.nanorc` в `tools/cli.nix`
+- Номера строк, подсветка синтаксиса (sh/nix/python/json/md/...), мышь,
+  softwrap, 4-space tabs
+
+### Added — Слой персональных настроек (mutable файлы)
+- `~/.config/fish/conf.d/local.fish` создаётся при первой установке как
+  template с примерами (alias/abbr/функции/env), больше не трогается
+  обновлениями. Fish сам подхватывает.
+- `~/.config/hypr/user.conf` template расширен — теперь содержит подробные
+  примеры: бинды, мониторы, env vars, windowrules, autostart, жесты.
+  Подключается ПОСЛЕДНИМ в hyprland.conf — переопределяет любые defaults.
+
+### Added — Слой системных оверрайдов (`custom/<host>.nix`)
+- `custom/README.md` переписан с подробными примерами:
+  - Добавить системные/user пакеты
+  - Свои fish-алиасы декларативно
+  - Включить дополнительный сервис
+  - Принудительный override (`lib.mkForce`)
+- `custom/_example.nix` — готовый template для копирования
+
+### Changed — Бинды
+| Что | Было | Стало |
+|---|---|---|
+| Терминал | `Super+Q` | **`Super+T`** |
+| Закрыть окно | `Super+C` | **`Super+Q`** (graceful, respects tray) |
+| Force-kill | — | **`Super+Shift+Q`** (новое, SIGKILL) |
+| Logout меню | `Super+Shift+M = exit` (опасный!) | **`Ctrl+Alt+Delete = wlogout`** |
+| Power performance | — | **`Super+F1`** |
+| Power balanced | — | **`Super+F2`** |
+| Power powersave | — | **`Super+F3`** |
+| Hyprshade toggle | — | **`Super+F11`** |
+| Scratchpad term | — | **`Super+\``** |
+| Scratchpad notes | — | **`Super+Shift+N`** |
+
+`Super+C` теперь свободен (был killactive).
+
+### Removed
+- **TLP** — заменён `power-profiles-daemon`. Charge thresholds через свой systemd-сервис.
+- **`Super+Shift+M = exit`** — заменён на `Ctrl+Alt+Delete = wlogout`.
+
+### Changed — архитектура
+- `modules/user/ui/wofi.nix`: убран `services.mako.enable` (переехал в `notifications.nix`).
+- `modules/user/home.nix`: добавлен импорт `./ui/notifications.nix`.
+- `lib/mkHost.nix`: добавлен `../modules/system/power-profiles.nix` в список модулей.
 
 ### Что делать другу при обновлении
 
@@ -60,89 +95,98 @@
 cd ~/nixos-config
 git fetch upstream
 git merge upstream/main
+
+# Если хост настроен — заполни новые поля в settings.nix:
+hx hosts/(hostname)/settings.nix
+# Добавь:
+#   powerProfile = null;
+#   batteryChargeLimit = null;
+
 nrs
 ```
 
-После пересборки перелогинься в Hyprland — home-manager переразложит
-конфиги waybar и hyprland. Скрипты появятся в `~/.config/hypr/scripts/`
-с правами на выполнение.
+После пересборки и перелогина в Hyprland:
+- `~/.config/fish/conf.d/local.fish` появится с примерами
+- `~/.config/hypr/user.conf` обновится с расширенными примерами (если ты
+  не редактировал старый — он перезапишется новым шаблоном; если
+  редактировал — старый останется, поскольку activation проверяет существование)
 
-### Проверки после применения
+### Breaking changes
+1. `services.tlp` убран — если в твоём `custom/<host>.nix` ты от него зависел,
+   надо переключиться на `services.power-profiles-daemon` (или вернуть TLP
+   в `custom/`).
+2. `Super+Shift+M` больше не выходит из сессии. Используй `Ctrl+Alt+Delete`.
+3. `Super+Q` больше не открывает kitty — теперь `Super+T`. Если привык —
+   можно переопределить через `~/.config/hypr/user.conf`:
+   ```
+   unbind = SUPER, T
+   unbind = SUPER, Q
+   bind = SUPER, Q, exec, kitty
+   bind = SUPER, C, killactive
+   ```
 
-```fish
-# 1. Скрипты на месте и исполняемые
-ls -la ~/.config/hypr/scripts/
-# volume.sh и wifi-menu.sh с x-битом
+---
 
-# 2. Громкость не поднимается выше 100% (физическая Fn+F+)
-# 3. Когда опустишь до 0 — waybar показывает иконку mute (одну глифу)
+## [0.1.6] — 2026-06-05
 
-# 4. Hyprctl reload не пишет про deprecated windowrulev2
-hyprctl reload 2>&1 | grep -i "deprecat\|invalid"
+### Fixed
+- Громкость не выше 100% через `volume.sh` (cap + auto-mute at 0)
+- Иконка mute вместо текста, `windowrulev2` → `windowrule`
 
-# 5. Тычь по иконкам в waybar:
-#    - сеть → wifi-меню в wofi
-#    - bluetooth → blueman-manager (если settings.bluetooth = true)
-#    - громкость → pavucontrol
-#    - CPU/RAM → btop в kitty
-```
+### Added
+- Backlight + Bluetooth waybar модули, кликабельность всего, tooltips,
+  wifi-меню через wofi, networkmanagerapplet в трее
 
 ---
 
 ## [0.1.5] — 2026-06-05
 
 ### Changed
-- Тачпад: `clickfinger_behavior = false` → button-areas режим (нижний-левый = ЛКМ, нижний-правый = ПКМ).
+- Тачпад: `clickfinger_behavior = false` → button-areas режим
 
 ---
 
 ## [0.1.4] — 2026-06-05
 
 ### Fixed
-- «Белая Thunar»: `Adwaita-dark` → `adw-gtk3-dark` по `settings.theme`.
-- Error-плашка Hyprland: deprecated `workspace_swipe = true` → новый `gesture = ...` синтаксис.
+- "Белая Thunar": `Adwaita-dark` → `adw-gtk3-dark`
+- `workspace_swipe = true` (deprecated) → `gesture = ...`
 
 ### Added
-- Qt theming (Kvantum + qt5ct/qt6ct), nwg-look, Papirus иконки,
-  3-пальцевые жесты тачпада, явный tap_button_map = lrm.
-
-### Removed
-- Файл-сирота `hypridle.conf` от 0.1.1.
+- Qt theming, nwg-look, Papirus иконки, 3-пальцевые жесты
 
 ---
 
 ## [0.1.3] — 2026-06-05
 
 ### Added
-- Дефолтные обои Catppuccin, комментарии в `binds.conf`.
+- Дефолтные обои Catppuccin, комментарии в `binds.conf`
 
 ### Changed
-- Реструктура `dotfiles/hyprland/`: `idle/`, `conf/profile/`, `wallpapers/`.
+- Реструктура `dotfiles/hyprland/`: `idle/`, `conf/profile/`, `wallpapers/`
 
 ---
 
 ## [0.1.2] — 2026-06-05
 
 ### Added
-- Профильное idle поведение и закрытие крышки на ноутбуке.
+- Профильное idle, lid switch без suspend
 
 ---
 
 ## [0.1.1] — 2026-06-05
 
 ### Fixed
-- `noto-fonts-color-emoji`, `pkgs.tuigreet`, `programs.thunar`, `catppuccin.autoEnable = true`.
+- noto-fonts-color-emoji, tuigreet, thunar, catppuccin.autoEnable
 
 ### Changed
-- `flake.nix` description: `trefa-nixos` → `nixos-config`.
-- fish-алиасы используют `~/nixos-config/`.
+- flake description, fish-алиасы → `~/nixos-config/`
 
 ---
 
 ## [0.1.0] — Initial release
 
-Multi-host архитектура, Catppuccin, Hyprland-стек, AMD/Intel/Nvidia,
-профили laptop/desktop/server.
+Multi-host архитектура, Catppuccin, Hyprland-стек.
 
 ---
 

@@ -23,6 +23,7 @@
     ./ui/hyprland.nix
     ./ui/waybar.nix
     ./ui/wofi.nix
+    ./ui/notifications.nix
   ];
 
   home.stateVersion = "26.05";

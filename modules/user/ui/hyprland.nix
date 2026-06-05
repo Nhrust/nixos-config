@@ -1,24 +1,22 @@
 # =============================================================================
-# modules/user/ui/hyprland.nix — Hyprland конфиги
+# modules/user/ui/hyprland.nix — Hyprland конфиги + плагины
 # =============================================================================
 # Главный hyprland.conf подключает модули из conf/.
 # Последним подключается user.conf — для пользовательских override-ов.
 #
-# user.conf создаётся пустым при первой установке и больше не трогается
-# при обновлениях. Туда друг кладёт свои настройки.
+# user.conf создаётся с шаблоном-примерами при первой установке и больше
+# не трогается обновлениями. Юзер кладёт туда свои бинды/мониторы/правила.
 #
 # Часть файлов выбирается по settings.profile (laptop/desktop/server):
 #   - idle/<profile>.conf            → ~/.config/hypr/hypridle.conf
 #   - conf/profile/<profile>.conf    → ~/.config/hypr/conf/profile.conf
 #
-# Скрипты в scripts/ копируются как исполняемые (executable = true).
-# Используются из биндов и waybar кликов.
+# Скрипты в scripts/ копируются как исполняемые.
+# Используются из биндов (volume.sh, powerprofile.sh) и waybar (wifi-menu.sh).
 #
-# Дефолтная обоина копируется (не симлинком!) в ~/Pictures/wallpaper.png
-# при первой установке, если файла там ещё нет. Пользователь может заменить
-# её своей и обновления git pull её не перезапишут.
+# Плагины: pyprland (scratchpads + smart_gaps), hyprshade (blue-light).
 # =============================================================================
-{ lib, settings, ... }:
+{ lib, pkgs, settings, ... }:
 let
   profile = settings.profile;
   hypridleSrc = ../dotfiles/hyprland/idle + "/${profile}.conf";
@@ -28,10 +26,16 @@ let
   wallpaperSrc = ../dotfiles/hyprland/wallpapers + "/default-${settings.theme}.png";
 in
 {
-  # Главный конфиг — иммутабельный, обновляется через git pull upstream
+  # ── Плагины Hyprland-стека ────────────────────────────────────────────────
+  home.packages = with pkgs; [
+    pyprland     # Python-плагины (scratchpads, smart_gaps), запускается через `pypr`
+    hyprshade    # шейдеры — blue-light filter, vibrance и т.д.
+  ];
+
+  # Главный конфиг
   xdg.configFile."hypr/hyprland.conf".source = ../dotfiles/hyprland/hyprland.conf;
 
-  # Модули конфигурации — все иммутабельные
+  # Модули
   xdg.configFile."hypr/conf/monitors.conf".source     = ../dotfiles/hyprland/conf/monitors.conf;
   xdg.configFile."hypr/conf/env.conf".source          = ../dotfiles/hyprland/conf/env.conf;
   xdg.configFile."hypr/conf/autostart.conf".source    = ../dotfiles/hyprland/conf/autostart.conf;
@@ -51,8 +55,10 @@ in
   xdg.configFile."hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
   xdg.configFile."hypr/hypridle.conf".source  = hypridleSrc;
 
-  # ── Скрипты-обёртки (executable!) ─────────────────────────────────────────
-  # Используются из биндов (volume.sh) и из waybar click-handler (wifi-menu.sh).
+  # ── Pyprland: scratchpads + smart_gaps ───────────────────────────────────
+  xdg.configFile."hypr/pyprland.toml".source = ../dotfiles/hyprland/pyprland.toml;
+
+  # ── Скрипты-обёртки (executable) ──────────────────────────────────────────
   xdg.configFile."hypr/scripts/volume.sh" = {
     source     = ../dotfiles/hyprland/scripts/volume.sh;
     executable = true;
@@ -61,10 +67,12 @@ in
     source     = ../dotfiles/hyprland/scripts/wifi-menu.sh;
     executable = true;
   };
+  xdg.configFile."hypr/scripts/powerprofile.sh" = {
+    source     = ../dotfiles/hyprland/scripts/powerprofile.sh;
+    executable = true;
+  };
 
   # ── user.conf: создаётся один раз при первой установке ────────────────────
-  # Файл становится обычным mutable файлом — пользователь редактирует свободно,
-  # обновления через git pull его не трогают.
   home.activation.hyprlandUserConf =
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "$HOME/.config/hypr/user.conf" ]; then
@@ -75,8 +83,6 @@ in
     '';
 
   # ── Дефолтная обоина: создаётся один раз при первой установке ─────────────
-  # Если ~/Pictures/wallpaper.png отсутствует — копируем туда дефолт по теме.
-  # Замена пользователем своей картинкой больше не перезаписывается.
   home.activation.defaultWallpaper =
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "$HOME/Pictures/wallpaper.png" ]; then

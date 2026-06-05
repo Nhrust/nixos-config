@@ -24,8 +24,36 @@
 
     # ── Редактор ──────────────────────────────────────────────────────────
     helix       # modal редактор с LSP из коробки
+    nano        # классический простой редактор (используется через nanorc ниже)
 
     # ── Информация о системе ──────────────────────────────────────────────
     fastfetch
   ];
+
+  # ── nano: дружелюбные дефолты ─────────────────────────────────────────────
+  # programs.nano — NixOS-опция, в home-manager её нет. Поэтому пишем nanorc
+  # напрямую через xdg.configFile. Nano читает $XDG_CONFIG_HOME/nano/nanorc
+  # автоматически (или ~/.nanorc как fallback).
+  xdg.configFile."nano/nanorc".text = ''
+    # Внешний вид
+    set linenumbers          # номера строк слева
+    set indicator            # боковая полоса прокрутки
+    set constantshow         # статусбар всегда видим
+    set titlecolor white,blue
+    set statuscolor white,blue
+
+    # Поведение
+    set autoindent           # сохранять отступ при переносе
+    set softwrap             # переносить длинные строки визуально
+    set mouse                # клик мышью ставит курсор
+    set zap                  # выделенное удаляется при наборе
+    set wordbounds           # умное движение по словам (Ctrl+стрелки)
+
+    # Tabs
+    set tabsize 4            # ширина таба = 4 пробела
+    set tabstospaces         # Tab вставляет пробелы
+
+    # Подсветка синтаксиса для sh / nix / python / json / md / ...
+    include "/run/current-system/sw/share/nano/*.nanorc"
+  '';
 }

@@ -1,11 +1,13 @@
 // =============================================================================
-// waybar config.jsonc — Статус-бар сверху
+// waybar config.jsonc — Статус-бар (упрощённая версия)
 // =============================================================================
-// Все интерактивные модули кликабельны:
-//   ЛКМ        — основное действие (pavucontrol, wifi-меню, btop, blueman)
-//   ПКМ        — альтернатива (mute, nm-connection-editor, rfkill bluetooth)
-//   Колесо     — где есть смысл (громкость, яркость)
-//   Hover      — tooltip с деталями
+// Использует только базовые Unicode-символы из BMP, которые есть в любом
+// шрифте с поддержкой Unicode (не требует Nerd Font PUA глифов).
+//
+// Кликабельность:
+//   ЛКМ по custom/powerprofile → цикл performance/balanced/powersave
+//   ЛКМ по pulseaudio → pavucontrol
+//   ЛКМ по cpu/memory → btop в kitty
 // =============================================================================
 {
     "layer":    "top",
@@ -15,18 +17,8 @@
 
     "modules-left":   ["hyprland/workspaces", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right":  [
-        "tray",
-        "backlight",
-        "pulseaudio",
-        "bluetooth",
-        "network",
-        "cpu",
-        "memory",
-        "battery"
-    ],
+    "modules-right":  ["custom/powerprofile", "pulseaudio", "network", "cpu", "memory", "battery", "tray"],
 
-    // ── Воркспейсы ────────────────────────────────────────────────────────
     "hyprland/workspaces": {
         "format":      "{icon}",
         "on-click":    "activate",
@@ -37,46 +29,59 @@
         }
     },
 
-    // ── Заголовок активного окна ─────────────────────────────────────────
     "hyprland/window": {
         "max-length":       60,
         "separate-outputs": true
     },
 
-    // ── Часы ─────────────────────────────────────────────────────────────
-    // ЛКМ — переключить формат на длинный
     "clock": {
         "format":         "{:%H:%M  %d.%m.%Y}",
-        "format-alt":     "{:%A, %d %B %Y, %H:%M:%S}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
     },
 
-    // ── Системный трей (nm-applet, blueman-applet и др.) ─────────────────
-    "tray": {
-        "icon-size": 16,
-        "spacing":   8
+    "custom/powerprofile": {
+        "format":   "{}",
+        "exec":     "~/.config/hypr/scripts/powerprofile.sh status",
+        "interval": 5,
+        "on-click": "~/.config/hypr/scripts/powerprofile.sh cycle"
     },
 
-    // ── Подсветка экрана ─────────────────────────────────────────────────
-    // Колесо мыши на иконке — менять яркость на 5%
-    "backlight": {
-        "format":         "{icon} {percent}%",
-        "format-icons":   ["", "", "", "", "", "", "", "", ""],
-        "on-scroll-up":   "brightnessctl set 5%+",
-        "on-scroll-down": "brightnessctl set 5%-",
-        "tooltip-format": "Яркость: {percent}%"
+    "cpu": {
+        "format":   "CPU {usage}%",
+        "interval": 2,
+        "on-click": "kitty -e btop"
     },
 
-    // ── Громкость ────────────────────────────────────────────────────────
-    // ЛКМ — pavucontrol
-    // ПКМ — mute toggle
-    // Колесо — ±5%
+    "memory": {
+        "format":   "RAM {percentage}%",
+        "interval": 5,
+        "on-click": "kitty -e btop"
+    },
+
+    "battery": {
+        "format":          "{icon} {capacity}%",
+        "format-charging": "⚡ {capacity}%",
+        "format-plugged":  "⌁ {capacity}%",
+        "format-icons":    ["▁", "▂", "▃", "▄", "▅"],
+        "states": {
+            "warning":  30,
+            "critical": 15
+        }
+    },
+
+    "network": {
+        "format-wifi":         "≡ {signalStrength}%",
+        "format-ethernet":     "═ {ifname}",
+        "format-disconnected": "✕",
+        "tooltip-format-wifi":     "{essid} ({signalStrength}%)\n{ifname}: {ipaddr}",
+        "tooltip-format-ethernet": "{ifname}: {ipaddr}",
+        "on-click":            "~/.config/hypr/scripts/wifi-menu.sh"
+    },
+
     "pulseaudio": {
         "format":         "{icon} {volume}%",
-        "format-muted":   "",
-        "format-icons":   {
-            "default": ["", "", ""]
-        },
+        "format-muted":   "♪̸",
+        "format-icons":   { "default": ["♪", "♫", "♬"] },
         "scroll-step":    5,
         "max-volume":     100,
         "on-click":       "pavucontrol",
@@ -84,65 +89,7 @@
         "tooltip-format": "{desc}: {volume}%"
     },
 
-    // ── Bluetooth ────────────────────────────────────────────────────────
-    // ЛКМ — открыть blueman-manager
-    // ПКМ — выключить/включить адаптер через rfkill
-    "bluetooth": {
-        "format":                   "",
-        "format-disabled":          "",
-        "format-off":               "",
-        "format-on":                "",
-        "format-connected":         " {device_alias}",
-        "format-connected-battery": " {device_alias} {device_battery_percentage}%",
-        "tooltip-format":           "{controller_alias}\n{num_connections} устр.",
-        "tooltip-format-connected": "{device_enumerate}",
-        "on-click":                 "blueman-manager",
-        "on-click-right":           "rfkill toggle bluetooth"
-    },
-
-    // ── Сеть ─────────────────────────────────────────────────────────────
-    // ЛКМ — wifi-меню через wofi
-    // ПКМ — nm-connection-editor (полноценные настройки)
-    "network": {
-        "format-wifi":         " {signalStrength}%",
-        "format-ethernet":     "",
-        "format-disconnected": "",
-        "format-linked":       " (no IP)",
-        "format-disabled":     "",
-        "tooltip-format-wifi":         "{essid} ({signalStrength}%)\n{ifname}: {ipaddr}",
-        "tooltip-format-ethernet":     "{ifname}: {ipaddr}",
-        "tooltip-format-disconnected": "Нет подключения",
-        "on-click":            "~/.config/hypr/scripts/wifi-menu.sh",
-        "on-click-right":      "nm-connection-editor"
-    },
-
-    // ── CPU ──────────────────────────────────────────────────────────────
-    // ЛКМ — открыть btop в терминале
-    "cpu": {
-        "format":         " {usage}%",
-        "interval":       2,
-        "on-click":       "kitty -e btop",
-        "tooltip-format": "CPU: {usage}%"
-    },
-
-    // ── RAM ──────────────────────────────────────────────────────────────
-    "memory": {
-        "format":         " {percentage}%",
-        "interval":       5,
-        "on-click":       "kitty -e btop",
-        "tooltip-format": "RAM: {used:0.1f}G / {total:0.1f}G ({percentage}%)"
-    },
-
-    // ── Батарея ──────────────────────────────────────────────────────────
-    "battery": {
-        "format":          "{icon} {capacity}%",
-        "format-charging": " {capacity}%",
-        "format-plugged":  " {capacity}%",
-        "format-icons":    ["", "", "", "", ""],
-        "states": {
-            "warning":  30,
-            "critical": 15
-        },
-        "tooltip-format": "{timeTo}\n{power:0.1f}W"
+    "tray": {
+        "spacing": 8
     }
 }
