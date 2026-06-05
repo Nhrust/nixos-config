@@ -1,6 +1,8 @@
 { pkgs, settings, ... }:
 {
-  home.packages = with pkgs; [ lazygit ];
+  home.packages = with pkgs; [
+    lazygit # git TUI: коммиты, diff, ветки без запоминания команд
+  ];
 
   programs.git = {
     enable    = true;
@@ -12,6 +14,7 @@
     };
   };
 
+  # direnv автоматически активирует nix-окружение при входе в папку с flake.nix
   programs.direnv = {
     enable            = true;
     nix-direnv.enable = true;

@@ -10,7 +10,7 @@
     '';
 
     shellAliases = {
-      # Замены стандартных команд
+      # ── Замены стандартных команд ──────────────────────────────────────────
       cat   = "bat";
       ls    = "eza --icons";
       ll    = "eza -la --icons";
@@ -21,14 +21,14 @@
       ".."  = "cd ..";
       "..." = "cd ../..";
 
-      # NixOS
+      # ── NixOS ──────────────────────────────────────────────────────────────
       nrs = "sudo nixos-rebuild switch --flake ~/nixos-config/#${settings.hostname}";
       nrb = "sudo nixos-rebuild boot   --flake ~/nixos-config/#${settings.hostname}";
       nfu = "nix flake update ~/nixos-config";
       ngc = "nix-collect-garbage -d";
       nrl = "sudo nixos-rebuild switch --rollback";
 
-      # Git
+      # ── Git ────────────────────────────────────────────────────────────────
       g   = "git";
       gs  = "git status";
       gp  = "git push";

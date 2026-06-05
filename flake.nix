@@ -1,14 +1,16 @@
 {
-  description = "first console os by geysex";
+  description = "Reproducible NixOS configuration";
 
   inputs = {
-    nixpkgs.url      = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager     = {
-      url             = "github:nix-community/home-manager";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     disko = {
-      url             = "github:nix-community/disko";
+      url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -17,24 +19,27 @@
     let
       s = import ./settings.nix;
 
+      # Модуль CPU выбирается по settings.cpu
       cpuModule = {
         "amd"   = ./system/hardware/cpu-amd.nix;
         "intel" = ./system/hardware/cpu-intel.nix;
-      }.${s.cpu} or (throw "settings.nix: неизвестный cpu «${s.cpu}»");
+      }.${s.cpu} or (throw "settings.nix: неизвестный cpu «${s.cpu}». Допустимо: amd, intel");
 
+      # Модуль GPU выбирается по settings.gpu
       gpuModule = {
         "amd"    = ./system/hardware/gpu-amd.nix;
         "intel"  = ./system/hardware/gpu-intel.nix;
         "nvidia" = ./system/hardware/gpu-nvidia.nix;
-      }.${s.gpu} or (throw "settings.nix: неизвестный gpu «${s.gpu}»");
+      }.${s.gpu} or (throw "settings.nix: неизвестный gpu «${s.gpu}». Допустимо: amd, intel, nvidia");
 
+      # Профиль выбирается по settings.profile
       profileModule = {
         "laptop"  = ./system/profiles/laptop.nix;
         "desktop" = ./system/profiles/desktop.nix;
         "server"  = ./system/profiles/server.nix;
-      }.${s.profile} or (throw "settings.nix: неизвестный profile «${s.profile}»");
+      }.${s.profile} or (throw "settings.nix: неизвестный profile «${s.profile}». Допустимо: laptop, desktop, server");
 
-      # Выбор схемы разметки диска
+      # Схема разметки диска выбирается по settings.diskMode
       diskoModule = {
         "wipe"     = ./disko/btrfs.nix;
         "existing" = ./disko/btrfs-existing.nix;
