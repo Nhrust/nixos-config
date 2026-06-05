@@ -93,30 +93,7 @@ reboot
 > отдельный диск или VM (Путь 3). Также EFI раздел должен иметь флаг `esp`,
 > не только `boot` — иначе systemd-boot не запишет загрузочную запись.
 
-### 2а — Разделы уже есть, нужно только создать сабволюмы
-
-```bash
-lsblk -f  # проверь имена
-
-# Монтируем Btrfs раздел (замени nvme0n1p2 на свой)
-mount /dev/nvme0n1p2 /mnt
-
-# Создаём все сабволюмы
-btrfs subvolume create /mnt/@
-btrfs subvolume create /mnt/@home
-btrfs subvolume create /mnt/@nix
-btrfs subvolume create /mnt/@log
-btrfs subvolume create /mnt/@cache
-btrfs subvolume create /mnt/@tmp
-btrfs subvolume create /mnt/@swap
-
-# Проверяем
-btrfs subvolume list /mnt
-
-umount /mnt
-```
-
-### 2б — Разметить диск вручную через parted
+### 2.1 — Разметить диск вручную через parted
 
 ```bash
 parted /dev/nvme0n1
@@ -133,7 +110,7 @@ parted /dev/nvme0n1
 mkfs.vfat -F 32 -n boot /dev/nvme0n1p1
 mkfs.btrfs -L nixos /dev/nvme0n1p2
 
-# Создаём сабволюмы (как в 2а)
+# Создаём сабволюмы
 mount /dev/nvme0n1p2 /mnt
 btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@home
@@ -145,7 +122,13 @@ btrfs subvolume create /mnt/@swap
 umount /mnt
 ```
 
-### 2в — Установка после подготовки
+Настрой git (нужно для коммитов перед установкой — Nix flakes видят только то что в git):
+```bash
+git config --global user.email "your@email.com"
+git config --global user.name "Your Name"
+```
+
+### 2.2 — Установка после подготовки
 
 В `hosts/my-machine/settings.nix`:
 ```nix
