@@ -9,7 +9,7 @@ trefa-nixos/
 ├── lib/
 │   └── mkHost.nix                         Фабрика хоста
 │
-├── modules/                               ТВОЁ (обновляется upstream)
+├── modules/                               (обновляется upstream)
 │   │
 │   ├── disko/
 │   │   ├── btrfs.nix                      Авторазметка (diskMode = wipe)
@@ -85,7 +85,7 @@ trefa-nixos/
 │               ├── config
 │               └── style.css
 │
-├── hosts/                                 ТВОИ ХОСТЫ
+├── hosts/                                 ПОЛЬЗОВАТЕЛЬСКИЕ ХОСТЫ
 │   ├── _template/                         Шаблон (копируй для новой машины)
 │   │   ├── settings.nix
 │   │   ├── hardware.nix
@@ -94,7 +94,7 @@ trefa-nixos/
 │       ├── settings.nix                   Параметры этой машины
 │       └── hardware.nix                   Автогенерируется
 │
-└── custom/                                ТВОИ ДОПОЛНЕНИЯ
+└── custom/                                ДОПОЛНЕНИЯ
     ├── README.md
     └── <твой-хост>.nix                    Опционально, поверх modules/
 ```
