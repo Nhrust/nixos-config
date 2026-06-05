@@ -1,5 +1,5 @@
 {
-  description = "trefa-nixos — личный дистрибутив NixOS";
+  description = "nixos-config — multi-host NixOS дистрибутив";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";

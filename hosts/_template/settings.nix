@@ -35,7 +35,7 @@
   diskPartBoot = "/dev/nvme0n1p1"; # только для diskMode = "existing"
   diskPartRoot = "/dev/nvme0n1p2"; # только для diskMode = "existing"
 
-  # ── Гибернация (заполняется после установки, см. docs/HIBERNATION.md) ────
+  # ── Гибернация (заполняется после установки, см. docs/POST_INSTALL.md) ────
   resumeOffset = 0;
   rootUUID     = "FILL_ME";
 

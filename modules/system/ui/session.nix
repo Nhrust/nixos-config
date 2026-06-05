@@ -1,5 +1,5 @@
 # =============================================================================
-# modules/system/desktop.nix — Hyprland + greetd + XDG portals
+# modules/system/ui/session.nix — Hyprland + greetd + XDG portals
 # =============================================================================
 { pkgs, ... }:
 {

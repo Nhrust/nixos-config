@@ -1,5 +1,5 @@
 # =============================================================================
-# modules/user/fish.nix — Fish shell + алиасы
+# modules/user/shell/fish.nix — Fish shell + алиасы
 # =============================================================================
 { settings, ... }:
 {
@@ -24,9 +24,9 @@
       "..." = "cd ../..";
 
       # ── NixOS — используют $(hostname) для универсальности ──────────────
-      nrs = "sudo nixos-rebuild switch --flake ~/trefa-nixos/#$(hostname)";
-      nrb = "sudo nixos-rebuild boot   --flake ~/trefa-nixos/#$(hostname)";
-      nfu = "nix flake update ~/trefa-nixos";
+      nrs = "sudo nixos-rebuild switch --flake ~/nixos-config/#$(hostname)";
+      nrb = "sudo nixos-rebuild boot   --flake ~/nixos-config/#$(hostname)";
+      nfu = "nix flake update ~/nixos-config";
       ngc = "nix-collect-garbage -d";
       nrl = "sudo nixos-rebuild switch --rollback";
 
