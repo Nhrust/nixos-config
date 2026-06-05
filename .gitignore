@@ -1,7 +1,10 @@
-# Генерируется на каждой машине — добавляй принудительно: git add -f system/hardware.nix
-# Не коммитить в общий репо — файл специфичен для каждого устройства
-system/hardware.nix
-
+# Артефакты сборки Nix
 result
 result-*
 .direnv/
+
+# Backup и временные файлы
+*.bak
+*.tmp
+*~
+.DS_Store
