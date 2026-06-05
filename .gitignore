@@ -8,3 +8,7 @@ result-*
 *.tmp
 *~
 .DS_Store
+
+hosts/*
+   !hosts/_template/
+   !hosts/.gitkeep
