@@ -2,31 +2,39 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.3] — 2026-06-05
+## [0.1.4] — 2026-06-05
+
+### Fixed
+- **GTK тема: «белая Thunar».** В `modules/user/theme.nix` имя GTK темы было
+  `Adwaita-dark`, но пакет `adw-gtk3` поставляет темы под именами
+  `adw-gtk3` и `adw-gtk3-dark`. GTK не находил `Adwaita-dark` и сваливался
+  на дефолт (светлый Adwaita) — отсюда белые окна Thunar. Имя исправлено,
+  выбирается автоматически по `settings.theme`.
+- **Deprecated gestures syntax в `input.conf`.** Опции `workspace_swipe = true`
+  и `workspace_swipe_fingers = 3` были выпилены в Hyprland 0.51 (сентябрь 2025).
+  Они и были причиной error-плашки сверху экрана. Заменены на новый синтаксис
+  `gesture = <fingers>, <direction>, <action>`.
 
 ### Added
-- **Дефолтные обои Catppuccin** — `wallpapers/default-dark.png` и
-  `wallpapers/default-light.png` в `modules/user/dotfiles/hyprland/`.
-  Подбирается по `settings.theme` и копируется (не симлинком!) в
-  `~/Pictures/wallpaper.png` при первой установке. Замена пользовательской
-  картинкой переживает `git pull` и `nrs`.
-- **Комментарии в `conf/binds.conf`** — каждый бинд теперь подписан,
-  плюс шапка с объяснением `bind` vs `bindm` vs `bindl` vs `bindel`.
+- **Полное покрытие Qt тем.** В `theme.nix` добавлено:
+  - `qt.enable = true` с `platformTheme.name = "kvantum"` и `style.name = "kvantum"`
+  - пакеты `qt5ct`, `qt6ct`, `qtstyleplugin-kvantum` для Qt5 и Qt6
+  - Catppuccin-Kvantum тема подключается автоматически через `catppuccin.autoEnable`
+- **`nwg-look`** для GUI-настройки GTK тем/шрифтов/курсоров на лету.
+- **GTK4/libadwaita color-scheme** — `gtk-application-prefer-dark-theme`
+  прописывается в gtk3 и gtk4 конфигах, чтобы GTK4-приложения тоже
+  переключались в тёмный режим.
+- **Иконки Papirus** — `Papirus-Dark` / `Papirus-Light` по теме.
+- **Жесты тачпада на 3 пальца** в `input.conf`:
+  - горизонталь → переключение воркспейсов (как раньше, но новый синтаксис)
+  - вверх → fullscreen активного окна
+  - вниз → togglefloating (tile ↔ float)
+- **Явный `tap_button_map = lrm`** в touchpad — гарантирует, что
+  2 пальца тапом = ПКМ, 3 пальца = СКМ, независимо от системного дефолта.
 
-### Changed
-- **Реструктура `dotfiles/hyprland/`** — профильные конфиги ушли в подпапки:
-  - `hypridle-{laptop,desktop,server}.conf` → `idle/{laptop,desktop,server}.conf`
-  - `conf/profile-{laptop,desktop,server}.conf` → `conf/profile/{laptop,desktop,server}.conf`
-- **`modules/user/ui/hyprland.nix`** — пути источников обновлены под новую
-  структуру, добавлен селектор обоев и второй activation-скрипт для
-  копирования дефолтной обоины.
-
-### Breaking
-Нет в смысле поведения. Если у кого-то были собственные оверрайды
-`xdg.configFile."hypr/hypridle.conf"` или `"hypr/conf/profile.conf"` в
-`custom/<host>.nix` — они продолжают работать (мы не меняли destination,
-только source). Старые файлы `hypridle-*.conf` и `conf/profile-*.conf`
-удаляются из репо — но они уже не упоминаются нигде в коде.
+### Removed
+- **Файл-сирота `modules/user/dotfiles/hyprland/hypridle.conf`** — остаток
+  от эпохи до 0.1.2, на него ничего не ссылалось.
 
 ### Что делать другу при обновлении
 ```bash
@@ -34,86 +42,72 @@ cd ~/nixos-config
 git fetch upstream
 git merge upstream/main
 nrs
-# Перелогиниться в Hyprland — home-manager перемонтирует ~/.config/hypr/
-# При первой установке после обновления появится ~/Pictures/wallpaper.png
-# с дефолтной обоиной (если файла там ещё не было).
 ```
+После пересборки и нового логина в Hyprland:
+- Thunar и другие GTK3-приложения должны быть в тёмной теме (или светлой, по `settings.theme`).
+- Qt-приложения (`pavucontrol`, `kdenlive`, и т.п.) подхватывают Catppuccin через Kvantum.
+- Error-плашка от устаревших gesture-опций должна исчезнуть.
+- 3-пальцевые жесты тачпада начинают работать сразу.
+
+Если тема Qt не подцепилась — проверь:
+```bash
+echo $QT_QPA_PLATFORMTHEME    # должно быть "kvantum"
+echo $QT_STYLE_OVERRIDE       # должно быть "kvantum" или пусто
+ls ~/.config/Kvantum/         # должна быть kvantum.kvconfig с Catppuccin
+```
+
+---
+
+## [0.1.3] — 2026-06-05
+
+### Added
+- **Дефолтные обои Catppuccin** — `wallpapers/default-dark.png` и
+  `wallpapers/default-light.png`. Копируется в `~/Pictures/wallpaper.png`
+  при первой установке.
+- **Комментарии в `conf/binds.conf`** — каждый бинд подписан.
+
+### Changed
+- **Реструктура `dotfiles/hyprland/`**:
+  - `hypridle-{laptop,desktop,server}.conf` → `idle/{laptop,desktop,server}.conf`
+  - `conf/profile-{laptop,desktop,server}.conf` → `conf/profile/{laptop,desktop,server}.conf`
+- `modules/user/ui/hyprland.nix` — обновлены пути, добавлен activation-скрипт обоев.
 
 ---
 
 ## [0.1.2] — 2026-06-05
 
 ### Added
-- **Профильное поведение idle** — `hypridle.conf` теперь выбирается по
-  `settings.profile`:
-  - `laptop`  → 3 минуты простоя → экран гаснет И сессия лочится
-  - `desktop` → 5 минут простоя → экран гаснет И сессия лочится
-  - `server`  → автоматический idle отключён, ручной lock работает
-- **Закрытие крышки на ноутбуке** — экран гаснет, сессия лочится,
-  но машина НЕ суспендится. Wifi, музыка, фоновая компиляция продолжают
-  работать. Реализовано двумя слоями:
-  - `services.logind.lidSwitch* = "ignore"` в `modules/system/profiles/laptop.nix`
-  - `bindl=,switch:on:Lid Switch,exec,...` в новом `conf/profile-laptop.conf`
-- **Профильные конфиги Hyprland** — новый файл `conf/profile.conf`
-  подключается из главного `hyprland.conf` и автоматически указывает на
-  `conf/profile-{laptop,desktop,server}.conf`.
-
-### Changed
-- `modules/user/ui/hyprland.nix` теперь принимает `settings` в аргументах
-  и собирает source-пути для `hypridle.conf` и `conf/profile.conf`
-  через интерполяцию `settings.profile`.
+- **Профильное idle** — `hypridle.conf` по `settings.profile`:
+  - `laptop` → 3 минуты → экран гаснет + лок
+  - `desktop` → 5 минут → экран гаснет + лок
+  - `server` → только ручной лок
+- **Закрытие крышки на ноутбуке** — гасит и лочит, но не суспендит
+  (`services.logind.lidSwitch* = "ignore"` + `bindl=,switch:on:Lid Switch`).
 
 ### Removed
-- Старый общий `modules/user/dotfiles/hyprland/hypridle.conf` удалён —
-  заменён тремя профильными вариантами (`hypridle-{laptop,desktop,server}.conf`).
-
-### Breaking
-Если кто-то из друзей переопределял у себя `hypridle.conf` через
-`custom/<host>.nix` или `~/.config/hypr/user.conf` — поведение не меняется,
-так как `user.conf` подключается последним.
+- Старый общий `modules/user/dotfiles/hyprland/hypridle.conf` (заменён вариантами).
 
 ---
 
 ## [0.1.1] — 2026-06-05
 
 ### Fixed
-- **fonts:** `noto-fonts-emoji` переименован в `noto-fonts-color-emoji`.
-- **session:** `${pkgs.greetd.tuigreet}` → `${pkgs.tuigreet}`.
-- **session:** `xfce.thunar` → `programs.thunar.enable = true` + плагины,
-  gvfs, tumbler.
-- **theme:** `catppuccin.autoEnable = true` задан явно.
+- `noto-fonts-emoji` → `noto-fonts-color-emoji`.
+- `${pkgs.greetd.tuigreet}` → `${pkgs.tuigreet}`.
+- `xfce.thunar` → `programs.thunar.enable = true` + плагины.
+- `catppuccin.autoEnable = true` явно.
 
 ### Changed
 - `flake.nix` description: `trefa-nixos` → `nixos-config`.
-- `fish.nix` алиасы используют `~/nixos-config/` вместо `~/trefa-nixos/`.
-
-### Docs
-- `hosts/_template/settings.nix`: ссылка на `docs/POST_INSTALL.md §6` вместо
-  несуществующего `docs/HIBERNATION.md`.
-- Заголовочные комментарии в 10 файлах модулей приведены к актуальным путям.
+- `fish.nix` алиасы `~/nixos-config/` вместо `~/trefa-nixos/`.
 
 ---
 
 ## [0.1.0] — Initial release
 
-### Архитектура
-- Multi-host через `hosts/<имя>/`
-- Авто-сканирование папок в `flake.nix` через `lib/mkHost.nix`
-- Поддержка `custom/<имя>.nix` для опциональных кастомизаций
-- Catppuccin тема через `catppuccin-nix` flake input
-
-### Поддерживаемое железо
-- CPU: AMD, Intel
-- GPU: AMD (Mesa/RADV), Intel, Nvidia (proprietary)
-- Профили: laptop, desktop, server
-- Опционально: virtualization, printing, bluetooth
-
-### Софт в базе
-- **Hyprland стек:** hyprland, waybar, wofi, mako, hyprlock, hypridle, hyprpaper
-- **Аудио:** PipeWire (alsa/pulse/jack) + wireplumber + pavucontrol
-- **Сессия:** greetd + tuigreet
-- **GUI:** kitty, firefox, thunar
-- **Консоль:** fish, helix, tmux, bat, eza, fzf, zoxide, yazi, fd, ripgrep, btop, duf, dust, lazygit, direnv
+Multi-host архитектура, авто-сканирование hosts/, поддержка custom/,
+Catppuccin через catppuccin-nix flake input. CPU AMD/Intel, GPU
+AMD/Intel/Nvidia, профили laptop/desktop/server.
 
 ---
 
