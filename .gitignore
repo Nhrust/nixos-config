@@ -1,0 +1,6 @@
+# Генерируется на каждой машине через nixos-generate-config
+system/hardware.nix
+
+result
+result-*
+.direnv/
