@@ -25,15 +25,18 @@
 
       # ── NixOS — используют $(hostname) для универсальности ──────────────
       nrs = "sudo nixos-rebuild switch --flake ~/nixos-config/#$(hostname)";
+      nrd = "sudo nixos-rebuild dry-build --flake ~/nixos-config/#$(hostname)";
       nrb = "sudo nixos-rebuild boot   --flake ~/nixos-config/#$(hostname)";
-      nfu = "nix flake update ~/nixos-config";
-      ngc = "nix-collect-garbage -d";
+      nfu = "sudo nix flake update ~/nixos-config";
+      ncg = "sudo nix-collect-garbage -d";
+      nso = "sudo nix store optimise";
       nrl = "sudo nixos-rebuild switch --rollback";
 
       # ── Git ─────────────────────────────────────────────────────────────
       g   = "git";
       gs  = "git status";
-      gp  = "git push";
+      gph = "git push";
+      gpl = "git pull";
       gl  = "git log --oneline";
       gcl = "git clone";
     };

@@ -11,6 +11,9 @@
 #   - idle/<profile>.conf            → ~/.config/hypr/hypridle.conf
 #   - conf/profile/<profile>.conf    → ~/.config/hypr/conf/profile.conf
 #
+# Скрипты в scripts/ копируются как исполняемые (executable = true).
+# Используются из биндов и waybar кликов.
+#
 # Стандартное изображение обоев (не символинком!) в ~/Pictures/wallpaper.png
 # при первой установке, если файла там ещё нет. Пользователь может заменить
 # их своими и обновления git pull их не перезапишут.
@@ -48,6 +51,17 @@ in
   xdg.configFile."hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
   xdg.configFile."hypr/hypridle.conf".source  = hypridleSrc;
 
+  # ── Скрипты-обёртки (executable!) ─────────────────────────────────────────
+  # Используются из биндов (volume.sh) и из waybar click-handler (wifi-menu.sh).
+  xdg.configFile."hypr/scripts/volume.sh" = {
+    source     = ../dotfiles/hyprland/scripts/volume.sh;
+    executable = true;
+  };
+  xdg.configFile."hypr/scripts/wifi-menu.sh" = {
+    source     = ../dotfiles/hyprland/scripts/wifi-menu.sh;
+    executable = true;
+  };
+
   # ── user.conf: создаётся один раз при первой установке ────────────────────
   # Файл становится обычным mutable файлом — пользователь редактирует свободно,
   # обновления через git pull его не трогают.
@@ -60,7 +74,7 @@ in
       fi
     '';
 
-  # ── Дефолтные обои: создаётся один раз при первой установке ─────────────
+ # ── Дефолтные обои: создаётся один раз при первой установке ─────────────
   # Если ~/Pictures/wallpaper.png отсутствует — копируем туда дефолт по теме.
   # Замена пользователем своей картинкой больше не перезаписывается.
   home.activation.defaultWallpaper =

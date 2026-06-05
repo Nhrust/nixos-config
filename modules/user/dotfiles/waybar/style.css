@@ -1,4 +1,8 @@
-/* waybar style — базовый, Catppuccin переопределит цвета */
+/* =============================================================================
+ * waybar style.css — базовая стилизация
+ * Catppuccin цвета подключаются автоматически через catppuccin.autoEnable
+ * =============================================================================
+ */
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -10,36 +14,76 @@ window#waybar {
     background-color: transparent;
 }
 
+/* Три "кармана" модулей: левый, центральный, правый */
 .modules-left,
 .modules-center,
 .modules-right {
-    background: rgba(30, 30, 46, 0.85);
+    background:    rgba(30, 30, 46, 0.85);
     border-radius: 8px;
-    padding: 0 12px;
-    margin: 4px;
+    padding:       0 12px;
+    margin:        4px;
 }
 
+/* Воркспейсы */
 #workspaces button {
-    padding: 0 6px;
-    color:   #cdd6f4;
+    padding:    0 6px;
+    color:      #cdd6f4;
     background: transparent;
 }
 
 #workspaces button.active {
-    color: #cba6f7;
+    color:       #cba6f7;
     font-weight: bold;
 }
 
+#workspaces button.urgent {
+    color: #f38ba8;
+}
+
+/* Общий стиль для всех правых модулей */
 #clock,
 #cpu,
 #memory,
 #battery,
 #network,
 #pulseaudio,
-#tray {
+#bluetooth,
+#backlight,
+#tray,
+#window {
     padding: 0 8px;
-    color: #cdd6f4;
+    color:   #cdd6f4;
 }
 
-#battery.warning  { color: #f9e2af; }
-#battery.critical { color: #f38ba8; }
+/* Состояния батареи */
+#battery.warning  { color: #f9e2af; }   /* жёлтый */
+#battery.critical { color: #f38ba8; }   /* красный */
+
+/* Звук замьючен — серый */
+#pulseaudio.muted { color: #6c7086; }
+
+/* Сеть отключена — серый, не красный (тише визуально) */
+#network.disconnected,
+#network.disabled {
+    color: #6c7086;
+}
+
+/* Bluetooth выключен — серый */
+#bluetooth.disabled,
+#bluetooth.off {
+    color: #6c7086;
+}
+
+/* Bluetooth подключено устройство — мауве акцент */
+#bluetooth.connected {
+    color: #cba6f7;
+}
+
+/* Tray — для systray-апплетов (nm-applet, blueman-applet и т.п.) */
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+}
