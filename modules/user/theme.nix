@@ -40,11 +40,6 @@ in
       package = pkgs.adw-gtk3;
     };
 
-    iconTheme = {
-      name    = iconThemeName;
-      package = pkgs.papirus-icon-theme;
-    };
-
     cursorTheme = {
       name    = "Bibata-Modern-Classic";
       package = pkgs.bibata-cursors;
