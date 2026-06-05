@@ -2,6 +2,45 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.3] — 2026-06-05
+
+### Added
+- **Дефолтные обои Catppuccin** — `wallpapers/default-dark.png` и
+  `wallpapers/default-light.png` в `modules/user/dotfiles/hyprland/`.
+  Подбирается по `settings.theme` и копируется (не симлинком!) в
+  `~/Pictures/wallpaper.png` при первой установке. Замена пользовательской
+  картинкой переживает `git pull` и `nrs`.
+- **Комментарии в `conf/binds.conf`** — каждый бинд теперь подписан,
+  плюс шапка с объяснением `bind` vs `bindm` vs `bindl` vs `bindel`.
+
+### Changed
+- **Реструктура `dotfiles/hyprland/`** — профильные конфиги ушли в подпапки:
+  - `hypridle-{laptop,desktop,server}.conf` → `idle/{laptop,desktop,server}.conf`
+  - `conf/profile-{laptop,desktop,server}.conf` → `conf/profile/{laptop,desktop,server}.conf`
+- **`modules/user/ui/hyprland.nix`** — пути источников обновлены под новую
+  структуру, добавлен селектор обоев и второй activation-скрипт для
+  копирования дефолтной обоины.
+
+### Breaking
+Нет в смысле поведения. Если у кого-то были собственные оверрайды
+`xdg.configFile."hypr/hypridle.conf"` или `"hypr/conf/profile.conf"` в
+`custom/<host>.nix` — они продолжают работать (мы не меняли destination,
+только source). Старые файлы `hypridle-*.conf` и `conf/profile-*.conf`
+удаляются из репо — но они уже не упоминаются нигде в коде.
+
+### Что делать другу при обновлении
+```bash
+cd ~/nixos-config
+git fetch upstream
+git merge upstream/main
+nrs
+# Перелогиниться в Hyprland — home-manager перемонтирует ~/.config/hypr/
+# При первой установке после обновления появится ~/Pictures/wallpaper.png
+# с дефолтной обоиной (если файла там ещё не было).
+```
+
+---
+
 ## [0.1.2] — 2026-06-05
 
 ### Added
@@ -31,71 +70,27 @@
 ### Breaking
 Если кто-то из друзей переопределял у себя `hypridle.conf` через
 `custom/<host>.nix` или `~/.config/hypr/user.conf` — поведение не меняется,
-так как `user.conf` подключается последним. Но если был
-`xdg.configFile."hypr/hypridle.conf"` в custom — теперь его источник
-перекрывает выбранный профильный вариант (это и должно быть желаемым).
-
-### Что делать другу при обновлении
-```bash
-cd ~/nixos-config
-git fetch upstream
-git merge upstream/main
-nrs
-```
-После пересборки и нового логина в Hyprland — поведение idle подхватится
-автоматически по `settings.profile`. Для проверки lid switch на ноуте:
-закрой крышку → экран должен погаснуть и появиться lock-screen, но машина
-не уснёт. Имя устройства lid switch можно проверить через `hyprctl devices`
-если экран не гаснет при закрытии (см. комментарий в `conf/profile-laptop.conf`).
+так как `user.conf` подключается последним.
 
 ---
 
 ## [0.1.1] — 2026-06-05
 
 ### Fixed
-- **fonts:** `noto-fonts-emoji` переименован в `noto-fonts-color-emoji`
-  (deprecation в nixpkgs). Файл `modules/system/ui/fonts.nix`.
-- **session:** `${pkgs.greetd.tuigreet}` → `${pkgs.tuigreet}` (пакет
-  больше не лежит под префиксом `greetd.*`). Файл `modules/system/ui/session.nix`.
-- **session:** `xfce.thunar` в `environment.systemPackages` заменён на
-  модуль `programs.thunar.enable = true` с плагинами `thunar-volman` и
-  `thunar-archive-plugin`. Добавлены `services.gvfs.enable` и
-  `services.tumbler.enable` — нужны для корзины, MTP, превью.
-  Файл `modules/system/ui/session.nix`.
-- **theme:** `catppuccin.autoEnable` теперь задан явно (`= true`) —
-  убирает предупреждение от модуля catppuccin-nix.
-  Файл `modules/user/theme.nix`.
+- **fonts:** `noto-fonts-emoji` переименован в `noto-fonts-color-emoji`.
+- **session:** `${pkgs.greetd.tuigreet}` → `${pkgs.tuigreet}`.
+- **session:** `xfce.thunar` → `programs.thunar.enable = true` + плагины,
+  gvfs, tumbler.
+- **theme:** `catppuccin.autoEnable = true` задан явно.
 
 ### Changed
-- **flake:** поле `description` обновлено со старого `trefa-nixos` на
-  `nixos-config — multi-host NixOS дистрибутив`.
-- **fish:** алиасы `nrs`, `nrb`, `nfu` теперь используют путь
-  `~/nixos-config/` вместо `~/trefa-nixos/`. Под friend-friendly путь по
-  умолчанию (клонирование в `~/nixos-config`).
+- `flake.nix` description: `trefa-nixos` → `nixos-config`.
+- `fish.nix` алиасы используют `~/nixos-config/` вместо `~/trefa-nixos/`.
 
 ### Docs
-- `hosts/_template/settings.nix`: ссылка на несуществующий
-  `docs/HIBERNATION.md` заменена на `docs/POST_INSTALL.md` (раздел 6).
-- Заголовочные комментарии в 10 файлах `modules/` приведены в
-  соответствие с реальными путями после рефакторинга в подпапки
-  (`shell/`, `tools/`, `ui/`, `services/`).
-
-### Breaking
-Нет. Все правки внутренние или косметические; пользовательские
-`settings.nix` и `custom/<name>.nix` не затронуты.
-
-### Что делать другу при обновлении
-```bash
-cd ~/nixos-config
-git fetch upstream
-git merge upstream/main
-nrs   # или: sudo nixos-rebuild switch --flake .#$(hostname)
-```
-Если ты клонировал репо как `~/trefa-nixos`, переименуй папку:
-```bash
-mv ~/trefa-nixos ~/nixos-config
-```
-Иначе обновлённые алиасы `nrs`/`nrb`/`nfu` не найдут flake.
+- `hosts/_template/settings.nix`: ссылка на `docs/POST_INSTALL.md §6` вместо
+  несуществующего `docs/HIBERNATION.md`.
+- Заголовочные комментарии в 10 файлах модулей приведены к актуальным путям.
 
 ---
 
@@ -120,22 +115,6 @@ mv ~/trefa-nixos ~/nixos-config
 - **GUI:** kitty, firefox, thunar
 - **Консоль:** fish, helix, tmux, bat, eza, fzf, zoxide, yazi, fd, ripgrep, btop, duf, dust, lazygit, direnv
 
-### Параметры в settings.nix
-- `username`, `hostname`, `timezone`
-- `extraLocale` — опциональная вторая локаль
-- `cpu`, `gpu`, `profile`
-- `disk`, `swapSize`, `diskMode` (wipe / existing)
-- `diskPartBoot`, `diskPartRoot` (для existing)
-- `resumeOffset`, `rootUUID` (для гибернации)
-- `virtualization`, `printing`, `bluetooth`
-- `theme` (dark/light), `themeAccent`
-- `gitName`, `gitEmail`
-
-### Базовые алиасы
-- `nrs` / `nrb` / `nrl` / `nfu` / `ngc` — управление NixOS
-- `cat→bat`, `ls→eza`, `grep→rg`, `find→fd`, `cd→z` — замены команд
-- `g` / `gs` / `gp` / `gl` / `gcl` — git
-
 ---
 
 ## Формат записей в будущем
@@ -148,5 +127,5 @@ mv ~/trefa-nixos ~/nixos-config
 ### Deprecated — что будет удалено
 ### Removed — что удалено
 ### Fixed — исправления багов
-### Breaking — что ломает обратную совместимость (требует внимания при обновлении)
+### Breaking — что ломает обратную совместимость
 ```

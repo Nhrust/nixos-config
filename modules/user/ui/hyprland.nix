@@ -1,21 +1,28 @@
 # =============================================================================
 # modules/user/ui/hyprland.nix — Hyprland конфиги
 # =============================================================================
-# Главный hyprland.conf только подключает модули из conf/.
+# Главный hyprland.conf подключает модули из conf/.
 # Последним подключается user.conf — для пользовательских override-ов.
 #
 # user.conf создаётся пустым при первой установке и больше не трогается
 # при обновлениях. Туда друг кладёт свои настройки.
 #
 # Часть файлов выбирается по settings.profile (laptop/desktop/server):
-#   - hypridle.conf      — разные таймауты idle
-#   - conf/profile.conf  — lid switch для ноута, заглушка для остальных
+#   - idle/<profile>.conf            → ~/.config/hypr/hypridle.conf
+#   - conf/profile/<profile>.conf    → ~/.config/hypr/conf/profile.conf
+#
+# Стандартное изображение обоев (не символинком!) в ~/Pictures/wallpaper.png
+# при первой установке, если файла там ещё нет. Пользователь может заменить
+# их своими и обновления git pull их не перезапишут.
 # =============================================================================
 { lib, settings, ... }:
 let
   profile = settings.profile;
-  hypridleSrc = ../dotfiles/hyprland + "/hypridle-${profile}.conf";
-  profileSrc  = ../dotfiles/hyprland/conf + "/profile-${profile}.conf";
+  hypridleSrc = ../dotfiles/hyprland/idle + "/${profile}.conf";
+  profileSrc  = ../dotfiles/hyprland/conf/profile + "/${profile}.conf";
+
+  # Обои выбираются по теме: dark → мокко, light → латте
+  wallpaperSrc = ../dotfiles/hyprland/wallpapers + "/default-${settings.theme}.png";
 in
 {
   # Главный конфиг — иммутабельный, обновляется через git pull upstream
@@ -50,6 +57,18 @@ in
         mkdir -p "$HOME/.config/hypr"
         cat ${../dotfiles/hyprland/user.conf.template} > "$HOME/.config/hypr/user.conf"
         chmod u+w "$HOME/.config/hypr/user.conf"
+      fi
+    '';
+
+  # ── Дефолтные обои: создаётся один раз при первой установке ─────────────
+  # Если ~/Pictures/wallpaper.png отсутствует — копируем туда дефолт по теме.
+  # Замена пользователем своей картинкой больше не перезаписывается.
+  home.activation.defaultWallpaper =
+    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -f "$HOME/Pictures/wallpaper.png" ]; then
+        mkdir -p "$HOME/Pictures"
+        cp ${wallpaperSrc} "$HOME/Pictures/wallpaper.png"
+        chmod u+w "$HOME/Pictures/wallpaper.png"
       fi
     '';
 }
