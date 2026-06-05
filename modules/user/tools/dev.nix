@@ -8,10 +8,10 @@
   ];
 
   programs.git = {
-    enable    = true;
+    enable = true;
     settings = {
-      userName  = settings.gitName;
-      userEmail = settings.gitEmail;
+      user.name  = settings.gitName;
+      user.email = settings.gitEmail;
       init.defaultBranch = "main";
       pull.rebase        = false;
       core.editor        = "hx";
