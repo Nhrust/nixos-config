@@ -32,6 +32,11 @@ iwctl
 ping nixos.org
 ```
 
+Стань root один раз, чтобы дальше не писать `sudo` в каждой команде:
+```bash
+sudo -i
+```
+
 ### 3. Клонировать репо
 
 ```bash
@@ -60,21 +65,21 @@ lsblk
 
 ```bash
 # 1. Запустить disko (разметит диск и смонтирует в /mnt)
-sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
+nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
   --mode disko --flake .#my-machine
 
 # 2. Сгенерировать файл железа (флаг --no-filesystems обязателен!)
-sudo nixos-generate-config --no-filesystems --root /mnt
+nixos-generate-config --no-filesystems --root /mnt
 
 # 3. Скопировать в hosts/
-sudo cp /mnt/etc/nixos/hardware-configuration.nix hosts/my-machine/hardware.nix
+cp /mnt/etc/nixos/hardware-configuration.nix hosts/my-machine/hardware.nix
 
 # 4. Закоммитить (Nix flakes требуют чтобы все файлы были в git)
 git add hosts/my-machine/
 git commit -m "Add my-machine"
 
 # 5. Установить систему
-sudo nixos-install --flake .#my-machine
+nixos-install --flake .#my-machine
 
 # 6. После установки — пароль root и перезагрузка
 reboot
@@ -94,27 +99,27 @@ reboot
 lsblk -f  # проверь имена
 
 # Монтируем Btrfs раздел (замени nvme0n1p2 на свой)
-sudo mount /dev/nvme0n1p2 /mnt
+mount /dev/nvme0n1p2 /mnt
 
 # Создаём все сабволюмы
-sudo btrfs subvolume create /mnt/@
-sudo btrfs subvolume create /mnt/@home
-sudo btrfs subvolume create /mnt/@nix
-sudo btrfs subvolume create /mnt/@log
-sudo btrfs subvolume create /mnt/@cache
-sudo btrfs subvolume create /mnt/@tmp
-sudo btrfs subvolume create /mnt/@swap
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@nix
+btrfs subvolume create /mnt/@log
+btrfs subvolume create /mnt/@cache
+btrfs subvolume create /mnt/@tmp
+btrfs subvolume create /mnt/@swap
 
 # Проверяем
-sudo btrfs subvolume list /mnt
+btrfs subvolume list /mnt
 
-sudo umount /mnt
+umount /mnt
 ```
 
 ### 2б — Разметить диск вручную через parted
 
 ```bash
-sudo parted /dev/nvme0n1
+parted /dev/nvme0n1
 
 # Внутри parted:
 (parted) mklabel gpt              # ТОЛЬКО для пустого диска без таблицы разделов!
@@ -125,19 +130,19 @@ sudo parted /dev/nvme0n1
 (parted) quit
 
 # Форматируем
-sudo mkfs.vfat -F 32 -n boot /dev/nvme0n1p1
-sudo mkfs.btrfs -L nixos /dev/nvme0n1p2
+mkfs.vfat -F 32 -n boot /dev/nvme0n1p1
+mkfs.btrfs -L nixos /dev/nvme0n1p2
 
 # Создаём сабволюмы (как в 2а)
-sudo mount /dev/nvme0n1p2 /mnt
-sudo btrfs subvolume create /mnt/@
-sudo btrfs subvolume create /mnt/@home
-sudo btrfs subvolume create /mnt/@nix
-sudo btrfs subvolume create /mnt/@log
-sudo btrfs subvolume create /mnt/@cache
-sudo btrfs subvolume create /mnt/@tmp
-sudo btrfs subvolume create /mnt/@swap
-sudo umount /mnt
+mount /dev/nvme0n1p2 /mnt
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@nix
+btrfs subvolume create /mnt/@log
+btrfs subvolume create /mnt/@cache
+btrfs subvolume create /mnt/@tmp
+btrfs subvolume create /mnt/@swap
+umount /mnt
 ```
 
 ### 2в — Установка после подготовки
@@ -151,24 +156,24 @@ diskPartRoot = "/dev/nvme0n1p2";
 
 ```bash
 # 1. Смонтировать через disko (mount, не disko)
-sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
+nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
   --mode mount --flake .#my-machine
 
 # 2. Проверь что EFI раздел смонтирован
 mount | grep /mnt/boot
 
 # 3. Сгенерировать железо
-sudo nixos-generate-config --no-filesystems --root /mnt
-sudo cp /mnt/etc/nixos/hardware-configuration.nix hosts/my-machine/hardware.nix
+nixos-generate-config --no-filesystems --root /mnt
+cp /mnt/etc/nixos/hardware-configuration.nix hosts/my-machine/hardware.nix
 git add hosts/my-machine/ && git commit -m "Add my-machine"
 
 # 4. Установить
-sudo nixos-install --flake .#my-machine
+nixos-install --flake .#my-machine
 
 # 5. После установки проверить что загрузочная запись создана:
-sudo efibootmgr -v | grep -i nixos
+efibootmgr -v | grep -i nixos
 # Если записи нет — добавить вручную:
-# sudo bootctl install --esp-path=/mnt/boot
+# bootctl install --esp-path=/mnt/boot
 
 reboot
 ```
