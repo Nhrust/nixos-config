@@ -79,10 +79,9 @@ in
   # Эти штуки полезны при отладке и подстройке вручную, но не обязательны
   # для работы темы — основная конфигурация декларативна через nix выше.
   home.packages = with pkgs; [
-    nwg-look                            # GUI-настройщик GTK тем/шрифтов/курсоров
-    libsForQt5.qt5ct                    # настройщик Qt5 (читается Qt при QT_QPA_PLATFORMTHEME=qt5ct)
-    qt6ct                               # настройщик Qt6
-    libsForQt5.qtstyleplugin-kvantum    # Kvantum движок для Qt5
-    kdePackages.qtstyleplugin-kvantum   # Kvantum движок для Qt6
+  libsForQt5.qt5ct
+  qt6Packages.qt6ct
+  libsForQt5.qtstyleplugin-kvantum
+  nwg-look
   ];
 }
