@@ -2,39 +2,21 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.1.4] — 2026-06-05
+## [0.1.5] — 2026-06-05
 
-### Fixed
-- **GTK тема: «белая Thunar».** В `modules/user/theme.nix` имя GTK темы было
-  `Adwaita-dark`, но пакет `adw-gtk3` поставляет темы под именами
-  `adw-gtk3` и `adw-gtk3-dark`. GTK не находил `Adwaita-dark` и сваливался
-  на дефолт (светлый Adwaita) — отсюда белые окна Thunar. Имя исправлено,
-  выбирается автоматически по `settings.theme`.
-- **Deprecated gestures syntax в `input.conf`.** Опции `workspace_swipe = true`
-  и `workspace_swipe_fingers = 3` были выпилены в Hyprland 0.51 (сентябрь 2025).
-  Они и были причиной error-плашки сверху экрана. Заменены на новый синтаксис
-  `gesture = <fingers>, <direction>, <action>`.
-
-### Added
-- **Полное покрытие Qt тем.** В `theme.nix` добавлено:
-  - `qt.enable = true` с `platformTheme.name = "kvantum"` и `style.name = "kvantum"`
-  - пакеты `qt5ct`, `qt6ct`, `qtstyleplugin-kvantum` для Qt5 и Qt6
-  - Catppuccin-Kvantum тема подключается автоматически через `catppuccin.autoEnable`
-- **`nwg-look`** для GUI-настройки GTK тем/шрифтов/курсоров на лету.
-- **GTK4/libadwaita color-scheme** — `gtk-application-prefer-dark-theme`
-  прописывается в gtk3 и gtk4 конфигах, чтобы GTK4-приложения тоже
-  переключались в тёмный режим.
-- **Иконки Papirus** — `Papirus-Dark` / `Papirus-Light` по теме.
-- **Жесты тачпада на 3 пальца** в `input.conf`:
-  - горизонталь → переключение воркспейсов (как раньше, но новый синтаксис)
-  - вверх → fullscreen активного окна
-  - вниз → togglefloating (tile ↔ float)
-- **Явный `tap_button_map = lrm`** в touchpad — гарантирует, что
-  2 пальца тапом = ПКМ, 3 пальца = СКМ, независимо от системного дефолта.
-
-### Removed
-- **Файл-сирота `modules/user/dotfiles/hyprland/hypridle.conf`** — остаток
-  от эпохи до 0.1.2, на него ничего не ссылалось.
+### Changed
+- **Тачпад: физический клик переключён в режим button-areas.**
+  В `modules/user/dotfiles/hyprland/conf/input.conf` опция
+  `clickfinger_behavior` теперь `false`. Это означает:
+  - Раньше (`true`, режим clickfinger): кнопку определяло **число пальцев**
+    (1 палец = ЛКМ, 2 пальца = ПКМ).
+  - Теперь (`false`, режим button-areas): кнопку определяет **где ты кликнул**
+    физически на тачпаде:
+    - нижний-левый угол → ЛКМ
+    - нижний-правый угол → ПКМ
+    - нижний-центральный → СКМ
+  - Tap-to-click и `tap_button_map = lrm` не затронуты — двойной тап
+    одним пальцем продолжает работать как ПКМ.
 
 ### Что делать другу при обновлении
 ```bash
@@ -43,71 +25,72 @@ git fetch upstream
 git merge upstream/main
 nrs
 ```
-После пересборки и нового логина в Hyprland:
-- Thunar и другие GTK3-приложения должны быть в тёмной теме (или светлой, по `settings.theme`).
-- Qt-приложения (`pavucontrol`, `kdenlive`, и т.п.) подхватывают Catppuccin через Kvantum.
-- Error-плашка от устаревших gesture-опций должна исчезнуть.
-- 3-пальцевые жесты тачпада начинают работать сразу.
+Перелогиниваться в Hyprland не обязательно — `hyprctl reload` подхватит
+новый input.conf на лету.
 
-Если тема Qt не подцепилась — проверь:
-```bash
-echo $QT_QPA_PLATFORMTHEME    # должно быть "kvantum"
-echo $QT_STYLE_OVERRIDE       # должно быть "kvantum" или пусто
-ls ~/.config/Kvantum/         # должна быть kvantum.kvconfig с Catppuccin
-```
+---
+
+## [0.1.4] — 2026-06-05
+
+### Fixed
+- **«Белая Thunar»:** `theme.name = "Adwaita-dark"` → `adw-gtk3-dark`/`adw-gtk3`
+  по `settings.theme`. Пакет `adw-gtk3` не поставляет тему `Adwaita-dark`.
+- **Error-плашка от Hyprland:** `workspace_swipe = true` и
+  `workspace_swipe_fingers = 3` (deprecated в Hyprland 0.51+) заменены
+  на новый синтаксис `gesture = ...`.
+
+### Added
+- Qt theming: Kvantum + `qt5ct`/`qt6ct` + Catppuccin-Kvantum через
+  `catppuccin.autoEnable`.
+- `nwg-look` для GUI-настройки GTK.
+- Иконки Papirus (Dark/Light по теме).
+- GTK4/libadwaita `prefer-dark-theme` в gtk3/gtk4 extraConfig.
+- 3-пальцевые жесты тачпада: ←/→ воркспейсы, ↑ fullscreen, ↓ togglefloating.
+- Явный `tap_button_map = lrm` для tap-to-click.
+
+### Removed
+- Файл-сирота `modules/user/dotfiles/hyprland/hypridle.conf` (от 0.1.1).
 
 ---
 
 ## [0.1.3] — 2026-06-05
 
 ### Added
-- **Дефолтные обои Catppuccin** — `wallpapers/default-dark.png` и
-  `wallpapers/default-light.png`. Копируется в `~/Pictures/wallpaper.png`
-  при первой установке.
-- **Комментарии в `conf/binds.conf`** — каждый бинд подписан.
+- Дефолтные обои Catppuccin (`wallpapers/default-{dark,light}.png`).
+- Комментарии в `conf/binds.conf` для каждого бинда.
 
 ### Changed
-- **Реструктура `dotfiles/hyprland/`**:
-  - `hypridle-{laptop,desktop,server}.conf` → `idle/{laptop,desktop,server}.conf`
-  - `conf/profile-{laptop,desktop,server}.conf` → `conf/profile/{laptop,desktop,server}.conf`
-- `modules/user/ui/hyprland.nix` — обновлены пути, добавлен activation-скрипт обоев.
+- Реструктура `dotfiles/hyprland/`: `hypridle-*.conf` → `idle/*.conf`,
+  `conf/profile-*.conf` → `conf/profile/*.conf`.
 
 ---
 
 ## [0.1.2] — 2026-06-05
 
 ### Added
-- **Профильное idle** — `hypridle.conf` по `settings.profile`:
-  - `laptop` → 3 минуты → экран гаснет + лок
-  - `desktop` → 5 минут → экран гаснет + лок
-  - `server` → только ручной лок
-- **Закрытие крышки на ноутбуке** — гасит и лочит, но не суспендит
-  (`services.logind.lidSwitch* = "ignore"` + `bindl=,switch:on:Lid Switch`).
+- Профильное idle поведение и закрытие крышки на ноутбуке.
 
 ### Removed
-- Старый общий `modules/user/dotfiles/hyprland/hypridle.conf` (заменён вариантами).
+- Старый общий `hypridle.conf`, заменён вариантами.
 
 ---
 
 ## [0.1.1] — 2026-06-05
 
 ### Fixed
-- `noto-fonts-emoji` → `noto-fonts-color-emoji`.
-- `${pkgs.greetd.tuigreet}` → `${pkgs.tuigreet}`.
-- `xfce.thunar` → `programs.thunar.enable = true` + плагины.
-- `catppuccin.autoEnable = true` явно.
+- `noto-fonts-color-emoji`, `pkgs.tuigreet` (без greetd.), `programs.thunar`,
+  `catppuccin.autoEnable = true`.
 
 ### Changed
 - `flake.nix` description: `trefa-nixos` → `nixos-config`.
-- `fish.nix` алиасы `~/nixos-config/` вместо `~/trefa-nixos/`.
+- `fish.nix` алиасы используют `~/nixos-config/`.
 
 ---
 
 ## [0.1.0] — Initial release
 
-Multi-host архитектура, авто-сканирование hosts/, поддержка custom/,
-Catppuccin через catppuccin-nix flake input. CPU AMD/Intel, GPU
-AMD/Intel/Nvidia, профили laptop/desktop/server.
+Multi-host архитектура, Catppuccin, Hyprland-стек, поддержка AMD/Intel/Nvidia,
+профили laptop/desktop/server.
 
 ---
 
