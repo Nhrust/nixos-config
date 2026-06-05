@@ -36,8 +36,8 @@ ping nixos.org
 
 ```bash
 nix-shell -p git
-git clone https://github.com/ТВОЙ_ЮЗЕР/trefa-nixos /tmp/trefa-nixos
-cd /tmp/trefa-nixos
+git clone https://github.com/Nhrust/nixos-config.git /tmp/nixos-config
+cd /tmp/nixos-config
 ```
 
 ### 4. Создать свой хост из шаблона

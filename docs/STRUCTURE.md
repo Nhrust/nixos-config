@@ -1,7 +1,7 @@
 # Структура репозитория
 
 ```
-trefa-nixos/
+nixos-config/
 │
 ├── flake.nix                              Точка входа Nix
 ├── README.md / CHANGELOG.md / .gitignore

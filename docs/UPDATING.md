@@ -11,7 +11,7 @@
 ## Получить обновления
 
 ```bash
-cd ~/trefa-nixos
+cd ~/nixos-config
 git fetch upstream
 git merge upstream/main
 ```
@@ -29,7 +29,7 @@ nrs
 ## Обновить зависимости (nixpkgs и т.д.)
 
 ```bash
-nfu        # alias для: nix flake update ~/trefa-nixos
+nfu        # alias для: nix flake update ~/nixos-config
 nrs        # применить с новыми версиями
 ```
 

@@ -29,17 +29,17 @@ cp ~/Downloads/моя-картинка.png ~/Pictures/wallpaper.png
 
 ## 4. Склонировать конфиг в домашнюю папку
 
-Во время установки конфиг был в `/tmp/trefa-nixos`. Перенеси его в постоянное место:
+Во время установки конфиг был в `/tmp/nixos-config`. Перенеси его в постоянное место:
 
 ```bash
-git clone https://github.com/ТВОЙ_ЮЗЕР/trefa-nixos ~/trefa-nixos
+git clone https://github.com/ТВОЙ_ЮЗЕР/nixos-config ~/nixos-config
 ```
 
 Если ты делаешь свой fork — добавь upstream:
 
 ```bash
-cd ~/trefa-nixos
-git remote add upstream https://github.com/АВТОР_ДИСТРИБУТИВА/trefa-nixos
+cd ~/nixos-config
+git remote add upstream https://github.com/АВТОР_ДИСТРИБУТИВА/nixos-config
 ```
 
 Теперь обновления получаешь через:
@@ -70,7 +70,7 @@ sudo btrfs inspect-internal map-swapfile -o /swap/swapfile
 sudo blkid /dev/nvme0n1p2
 
 # 3. Записать оба значения в hosts/my-machine/settings.nix
-nano ~/trefa-nixos/hosts/$(hostname)/settings.nix
+nano ~/nixos-config/hosts/$(hostname)/settings.nix
 
 # 4. Применить
 nrs
