@@ -7,15 +7,22 @@
   home.homeDirectory = "/home/${settings.username}";
 
   imports = [
-    ./fish.nix
-    ./tmux.nix
-    ./tools.nix
-    ./dev.nix
-    ./kitty.nix
-    ./hyprland.nix
-    ./waybar.nix
-    ./wofi.nix
+    # Общее
     ./theme.nix
+
+    # Shell
+    ./shell/fish.nix
+    ./shell/tmux.nix
+
+    # Инструменты
+    ./tools/cli.nix
+    ./tools/dev.nix
+
+    # UI приложения
+    ./ui/kitty.nix
+    ./ui/hyprland.nix
+    ./ui/waybar.nix
+    ./ui/wofi.nix
   ];
 
   home.stateVersion = "26.05";

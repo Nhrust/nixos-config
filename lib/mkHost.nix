@@ -9,8 +9,8 @@
 let
   inherit (inputs) nixpkgs home-manager disko catppuccin;
 
-  hostPath  = ../hosts + "/${name}";
-  settings  = import (hostPath + "/settings.nix");
+  hostPath = ../hosts + "/${name}";
+  settings = import (hostPath + "/settings.nix");
 
   # Опциональные кастомизации пользователя
   customPath   = ../custom + "/${name}.nix";
@@ -50,22 +50,26 @@ nixpkgs.lib.nixosSystem {
     disko.nixosModules.disko
     diskoModule
 
-    # Catppuccin темы (системный уровень — для консоли, плимут и т.д.)
+    # Catppuccin (системный уровень — консоль, плимут и т.д.)
     catppuccin.nixosModules.catppuccin
 
     # Железо конкретной машины
     (hostPath + "/hardware.nix")
 
-    # Базовая система
+    # Фундамент
     ../modules/system/main.nix
     ../modules/system/variables.nix
-    ../modules/system/audio.nix
-    ../modules/system/desktop.nix
-    ../modules/system/fonts.nix
-    ../modules/system/printing.nix
-    ../modules/system/bluetooth.nix
 
-    # Выбранные модули железа и профиль
+    # UI: сессия, аудио, шрифты
+    ../modules/system/ui/session.nix
+    ../modules/system/ui/audio.nix
+    ../modules/system/ui/fonts.nix
+
+    # Опциональные сервисы (активируются через флаги в settings)
+    ../modules/system/services/printing.nix
+    ../modules/system/services/bluetooth.nix
+
+    # Выбранные железо и профиль
     cpuModule
     gpuModule
     profileModule

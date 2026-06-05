@@ -1,21 +1,49 @@
 # Кастомизация
 
-Хочешь что-то поверх базы? Не редактируй `modules/` — потеряешь при обновлении.
-Используй один из двух механизмов.
+Хочешь что-то поверх базы? Есть три уровня кастомизации, от простого к сложному.
 
-## Путь 1 — `custom/<имя-хоста>.nix`
+---
 
-Создай файл с именем твоего хоста. Он подключится автоматически.
+## Уровень 1 — `~/.config/hypr/user.conf` (для Hyprland)
+
+Самый простой случай. Меняешь поведение Hyprland — биндинги, мониторы,
+автозапуск, правила окон.
+
+Файл `~/.config/hypr/user.conf` создаётся **один раз** при первой установке.
+Обновления через `git pull` его **не трогают**.
+
+Открой и редактируй:
 
 ```bash
-# Если хост называется my-laptop
-nano custom/my-laptop.nix
+hx ~/.config/hypr/user.conf
+```
+
+Применить:
+
+```bash
+hyprctl reload
+# или Super+Shift+R
+```
+
+Примеры внутри файла-шаблона. Документация Hyprland: https://wiki.hyprland.org/
+
+---
+
+## Уровень 2 — `custom/<имя-хоста>.nix`
+
+Для всего что не вписывается в `user.conf`. Системные пакеты, сервисы,
+параметры HM для других программ.
+
+Создай файл с именем твоего хоста:
+
+```bash
+hx custom/$(hostname).nix
 ```
 
 ```nix
 { pkgs, ... }:
 {
-  # Дополнительные системные пакеты
+  # Системные пакеты только для этой машины
   environment.systemPackages = with pkgs; [
     libreoffice
     discord
@@ -25,14 +53,18 @@ nano custom/my-laptop.nix
   # Дополнительные сервисы
   services.tailscale.enable = true;
 
-  # Переопределение настроек
+  # Переопределение опций
   services.tlp.settings.STOP_CHARGE_THRESH_BAT0 = 100;
 }
 ```
 
-## Путь 2 — Home Manager модуль
+Применить:
 
-Для пользовательских пакетов и конфигов лучше через HM. В том же `custom/my-laptop.nix`:
+```bash
+nrs
+```
+
+### HM настройки в custom
 
 ```nix
 { pkgs, ... }:
@@ -44,31 +76,46 @@ nano custom/my-laptop.nix
     ];
 
     programs.vscode = {
-      enable = true;
+      enable  = true;
       package = pkgs.vscodium;
     };
   };
 }
 ```
 
-## Что можно переопределить
+---
+
+## Уровень 3 — Fork репозитория
+
+Если хочешь менять сам дистрибутив (`modules/`, `flake.nix`) — делай fork.
+Не редактируй `modules/` в склонированном репо, потеряешь при `git pull upstream`.
+
+---
+
+## Что можно переопределять
 
 - ✅ Любые пакеты (`environment.systemPackages`, `home.packages`)
 - ✅ Сервисы (`services.*`)
 - ✅ Hardware-настройки (`hardware.*`)
 - ✅ Переменные окружения
 - ✅ Параметры программ из Home Manager
+- ✅ Hyprland через `user.conf`
 
 ## Что НЕ стоит трогать
 
 - ❌ `system.stateVersion` — должен быть зафиксирован
 - ❌ `home.stateVersion` — то же самое
 - ❌ Disko после первой установки
-- ❌ Основные параметры Hyprland (риск что не запустится)
+- ❌ `modules/` напрямую (твои правки потеряются при `git pull`)
 
-## Пример: своя тема для одной машины
+---
+
+## Примеры
+
+### Своя тема для одной машины
 
 ```nix
+# custom/my-laptop.nix
 { ... }:
 {
   home-manager.users.admin = {
@@ -80,7 +127,7 @@ nano custom/my-laptop.nix
 }
 ```
 
-## Пример: дополнительные шрифты
+### Дополнительные шрифты
 
 ```nix
 { pkgs, ... }:
@@ -92,9 +139,7 @@ nano custom/my-laptop.nix
 }
 ```
 
-## Пример: специфичные параметры ядра
-
-Например для Intel 12+ поколения нужен `vpl-gpu-rt`:
+### Intel 12+ поколения (vpl-gpu-rt)
 
 ```nix
 { pkgs, ... }:
@@ -105,7 +150,28 @@ nano custom/my-laptop.nix
 }
 ```
 
+### Свои биндинги Hyprland
+
+В `~/.config/hypr/user.conf`:
+
+```
+bind = SUPER, T, exec, telegram-desktop
+bind = SUPER, B, exec, firefox
+bind = SUPER SHIFT, Q, exec, hyprctl kill
+```
+
+### Подключить второй монитор
+
+В `~/.config/hypr/user.conf`:
+
+```
+monitor = DP-1, 2560x1440@144, 0x0, 1
+monitor = HDMI-A-1, 1920x1080@60, 2560x0, 1
+```
+
+---
+
 ## Поделиться кастомизацией
 
-Если твоё дополнение полезно всем — открой Pull Request в upstream с предложением
+Если твоё дополнение полезно всем — открой Pull Request с предложением
 добавить опцию в `settings.nix` или модуль в `modules/`.
