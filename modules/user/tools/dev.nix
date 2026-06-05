@@ -9,10 +9,9 @@
 
   programs.git = {
     enable    = true;
-    userName  = settings.gitName;
-    userEmail = settings.gitEmail;
-
-    extraConfig = {
+    settings = {
+      userName  = settings.gitName;
+      userEmail = settings.gitEmail;
       init.defaultBranch = "main";
       pull.rebase        = false;
       core.editor        = "hx";

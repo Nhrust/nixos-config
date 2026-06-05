@@ -12,20 +12,17 @@ in
 {
   catppuccin = {
     enable = true;
+    autoEnable = true;
     inherit flavor;
     accent = settings.themeAccent;
   };
 
-  # GTK тема в стиле Catppuccin
+  # GTK тема (без iconTheme — им управляет catppuccin)
   gtk = {
     enable = true;
     theme = {
-      name    = "Adwaita-dark";  # будет переопределена catppuccin-nix
+      name    = "Adwaita-dark";
       package = pkgs.adw-gtk3;
-    };
-    iconTheme = {
-      name    = "Papirus-Dark";
-      package = pkgs.papirus-icon-theme;
     };
     cursorTheme = {
       name    = "Bibata-Modern-Classic";

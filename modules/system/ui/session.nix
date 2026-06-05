@@ -15,7 +15,7 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.tuigreet}/bin/tuigreet --time --remember --cmd Hyprland";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd Hyprland";
         user    = "greeter";
       };
     };
@@ -30,6 +30,18 @@
       xdg-desktop-portal-hyprland # Hyprland-специфичный портал
     ];
   };
+
+  # ── Thunar — файловый менеджер ────────────────────────────────────────────
+  programs.thunar = {
+    enable = true;
+    plugins = with pkgs.xfce; [
+      thunar-volman
+      thunar-archive-plugin
+    ];
+  };
+
+  services.gvfs.enable    = true;
+  services.tumbler.enable = true;
 
   # ── Системные пакеты для рабочего окружения ───────────────────────────────
   environment.systemPackages = with pkgs; [
@@ -46,6 +58,5 @@
 
     # Базовый GUI софт
     firefox
-    xfce.thunar       # файловый менеджер (xfce-prefix чтобы не тянуть всё XFCE)
   ];
 }
