@@ -21,10 +21,10 @@
     disableWhileTyping = true;
   };
 
-  services.logind = {
-    lidSwitch              = "ignore";  # от батареи
-    lidSwitchExternalPower = "ignore";  # от сети
-    lidSwitchDocked        = "ignore";  # в док-станции
+  services.logind.settings.Login = {
+    HandleLidSwitch              = "ignore";
+    HandleLidSwitchDocked        = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
   };
 
   environment.systemPackages = with pkgs; [

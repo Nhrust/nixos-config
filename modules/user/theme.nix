@@ -79,9 +79,9 @@ in
   # Эти штуки полезны при отладке и подстройке вручную, но не обязательны
   # для работы темы — основная конфигурация декларативна через nix выше.
   home.packages = with pkgs; [
-  libsForQt5.qt5ct
-  qt6Packages.qt6ct
-  libsForQt5.qtstyleplugin-kvantum
-  nwg-look
+    libsForQt5.qt5ct
+    qt6Packages.qt6ct
+    libsForQt5.qtstyleplugin-kvantum
+    nwg-look
   ];
 }
