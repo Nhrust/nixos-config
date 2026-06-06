@@ -11,16 +11,24 @@
 #   - idle/<profile>.conf            → ~/.config/hypr/hypridle.conf
 #   - conf/profile/<profile>.conf    → ~/.config/hypr/conf/profile.conf
 #
+# hypridle.conf копируется ТОЛЬКО для laptop/desktop. На server демон не нужен:
+# машина не должна гаснуть/лочиться автоматически (см. conf/profile/server.conf).
+#
 # Скрипты в scripts/ копируются как исполняемые.
-# Используются из биндов (volume.sh, powerprofile.sh) и waybar (wifi-menu.sh).
+# Используются из биндов (volume.sh, powerprofile.sh) и waybar
+# (wifi-menu.sh, powerprofile.sh).
 #
 # Плагины: pyprland (scratchpads + smart_gaps), hyprshade (blue-light).
 # =============================================================================
 { lib, pkgs, settings, ... }:
 let
-  profile = settings.profile;
-  hypridleSrc = ../dotfiles/hyprland/idle + "/${profile}.conf";
+  profile     = settings.profile;
   profileSrc  = ../dotfiles/hyprland/conf/profile + "/${profile}.conf";
+
+  # hypridle нужен только на laptop/desktop. На server файл не копируется,
+  # а демон не запускается из conf/profile/server.conf.
+  needsHypridle = profile != "server";
+  hypridleSrc   = ../dotfiles/hyprland/idle + "/${profile}.conf";
 
   # Обои выбираются по теме: dark → мокко, light → латте
   wallpaperSrc = ../dotfiles/hyprland/wallpapers + "/default-${settings.theme}.png";
@@ -32,45 +40,49 @@ in
     hyprshade    # шейдеры — blue-light filter, vibrance и т.д.
   ];
 
-  # Главный конфиг
-  xdg.configFile."hypr/hyprland.conf".source = ../dotfiles/hyprland/hyprland.conf;
+  # ── Конфиги Hyprland (read-only, обновляются upstream) ────────────────────
+  xdg.configFile = {
+    "hypr/hyprland.conf".source = ../dotfiles/hyprland/hyprland.conf;
 
-  # Модули
-  xdg.configFile."hypr/conf/monitors.conf".source     = ../dotfiles/hyprland/conf/monitors.conf;
-  xdg.configFile."hypr/conf/env.conf".source          = ../dotfiles/hyprland/conf/env.conf;
-  xdg.configFile."hypr/conf/autostart.conf".source    = ../dotfiles/hyprland/conf/autostart.conf;
-  xdg.configFile."hypr/conf/input.conf".source        = ../dotfiles/hyprland/conf/input.conf;
-  xdg.configFile."hypr/conf/general.conf".source      = ../dotfiles/hyprland/conf/general.conf;
-  xdg.configFile."hypr/conf/decoration.conf".source   = ../dotfiles/hyprland/conf/decoration.conf;
-  xdg.configFile."hypr/conf/animations.conf".source   = ../dotfiles/hyprland/conf/animations.conf;
-  xdg.configFile."hypr/conf/misc.conf".source         = ../dotfiles/hyprland/conf/misc.conf;
-  xdg.configFile."hypr/conf/binds.conf".source        = ../dotfiles/hyprland/conf/binds.conf;
-  xdg.configFile."hypr/conf/windowrules.conf".source  = ../dotfiles/hyprland/conf/windowrules.conf;
+    # Модули
+    "hypr/conf/monitors.conf".source     = ../dotfiles/hyprland/conf/monitors.conf;
+    "hypr/conf/env.conf".source          = ../dotfiles/hyprland/conf/env.conf;
+    "hypr/conf/autostart.conf".source    = ../dotfiles/hyprland/conf/autostart.conf;
+    "hypr/conf/input.conf".source        = ../dotfiles/hyprland/conf/input.conf;
+    "hypr/conf/general.conf".source      = ../dotfiles/hyprland/conf/general.conf;
+    "hypr/conf/decoration.conf".source   = ../dotfiles/hyprland/conf/decoration.conf;
+    "hypr/conf/animations.conf".source   = ../dotfiles/hyprland/conf/animations.conf;
+    "hypr/conf/misc.conf".source         = ../dotfiles/hyprland/conf/misc.conf;
+    "hypr/conf/binds.conf".source        = ../dotfiles/hyprland/conf/binds.conf;
+    "hypr/conf/windowrules.conf".source  = ../dotfiles/hyprland/conf/windowrules.conf;
 
-  # Профильный конфиг — выбирается по settings.profile
-  xdg.configFile."hypr/conf/profile.conf".source = profileSrc;
+    # Профильный конфиг — выбирается по settings.profile
+    "hypr/conf/profile.conf".source = profileSrc;
 
-  # Сопутствующие конфиги Hyprland
-  xdg.configFile."hypr/hyprpaper.conf".source = ../dotfiles/hyprland/hyprpaper.conf;
-  xdg.configFile."hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
-  xdg.configFile."hypr/hypridle.conf".source  = hypridleSrc;
+    # Сопутствующие конфиги Hyprland
+    "hypr/hyprpaper.conf".source = ../dotfiles/hyprland/hyprpaper.conf;
+    "hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
 
-  # ── Pyprland: scratchpads + smart_gaps ───────────────────────────────────
-  xdg.configFile."hypr/pyprland.toml".source = ../dotfiles/hyprland/pyprland.toml;
+    # Pyprland: scratchpads + smart_gaps
+    "hypr/pyprland.toml".source  = ../dotfiles/hyprland/pyprland.toml;
 
-  # ── Скрипты-обёртки (executable) ──────────────────────────────────────────
-  xdg.configFile."hypr/scripts/volume.sh" = {
-    source     = ../dotfiles/hyprland/scripts/volume.sh;
-    executable = true;
-  };
-  xdg.configFile."hypr/scripts/wifi-menu.sh" = {
-    source     = ../dotfiles/hyprland/scripts/wifi-menu.sh;
-    executable = true;
-  };
-  xdg.configFile."hypr/scripts/powerprofile.sh" = {
-    source     = ../dotfiles/hyprland/scripts/powerprofile.sh;
-    executable = true;
-  };
+    # Скрипты-обёртки (executable)
+    "hypr/scripts/volume.sh" = {
+      source     = ../dotfiles/hyprland/scripts/volume.sh;
+      executable = true;
+    };
+    "hypr/scripts/wifi-menu.sh" = {
+      source     = ../dotfiles/hyprland/scripts/wifi-menu.sh;
+      executable = true;
+    };
+    "hypr/scripts/powerprofile.sh" = {
+      source     = ../dotfiles/hyprland/scripts/powerprofile.sh;
+      executable = true;
+    };
+  } // (lib.optionalAttrs needsHypridle {
+    # hypridle конфиг только для laptop/desktop
+    "hypr/hypridle.conf".source = hypridleSrc;
+  });
 
   # ── user.conf: создаётся один раз при первой установке ────────────────────
   home.activation.hyprlandUserConf =

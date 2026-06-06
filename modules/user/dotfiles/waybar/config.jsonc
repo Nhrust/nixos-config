@@ -17,6 +17,7 @@
     "modules-center": ["clock"],
     "modules-right":  [
         "tray",
+        "custom/powerprofile",
         "backlight",
         "pulseaudio",
         "bluetooth",
@@ -55,6 +56,18 @@
     "tray": {
         "icon-size": 16,
         "spacing":   8
+    },
+
+    // ── Power profile (performance/balanced/power-saver) ─────────────────
+    // ЛКМ — циклить по профилям
+    // Иконка и CSS-класс берутся из json-вывода скрипта,
+    // цвет настраивается через #custom-powerprofile.<class> в style.css
+    "custom/powerprofile": {
+        "exec":         "~/.config/hypr/scripts/powerprofile.sh json",
+        "on-click":     "~/.config/hypr/scripts/powerprofile.sh cycle",
+        "return-type":  "json",
+        "interval":     5,
+        "tooltip":      true
     },
 
     // ── Подсветка экрана ─────────────────────────────────────────────────

@@ -1,5 +1,9 @@
 /* =============================================================================
- * wlogout style.css — Catppuccin Mocha
+ * wlogout style.css — Структурный стиль
+ * =============================================================================
+ * Цвета (background-color, border) подтягиваются автоматически через
+ * catppuccin.autoEnable. Здесь только: размеры, скругления, padding,
+ * hover-transformation.
  * =============================================================================
  */
 
@@ -10,36 +14,15 @@
     font-size:        20px;
 }
 
-window {
-    background-color: rgba(30, 30, 46, 0.95);   /* base */
-}
-
 button {
-    color:              #cdd6f4;                 /* text */
-    background-color:   #181825;                 /* mantle */
-    border-radius:      14px;
-    border:             2px solid transparent;
-    margin:             10px;
-    transition:         all 0.15s ease-in-out;
+    border-radius: 14px;
+    border:        2px solid transparent;
+    margin:        10px;
+    transition:    all 0.15s ease-in-out;
 }
 
-button:hover, button:focus {
-    background-color:   #313244;                 /* surface0 */
-    border-color:       #cba6f7;                 /* mauve */
-    color:              #cba6f7;
-    outline-style:      none;
+button:hover,
+button:focus {
+    outline-style: none;
+    /* hover-эффект — рамка mauve акцентом, цвет даёт catppuccin */
 }
-
-#lock      { color: #89b4fa; }                   /* blue */
-#logout    { color: #fab387; }                   /* peach */
-#suspend   { color: #a6e3a1; }                   /* green */
-#hibernate { color: #94e2d5; }                   /* teal */
-#reboot    { color: #f9e2af; }                   /* yellow */
-#shutdown  { color: #f38ba8; }                   /* red */
-
-#lock:hover      { background-color: #1e1e2e; color: #89b4fa; border-color: #89b4fa; }
-#logout:hover    { background-color: #1e1e2e; color: #fab387; border-color: #fab387; }
-#suspend:hover   { background-color: #1e1e2e; color: #a6e3a1; border-color: #a6e3a1; }
-#hibernate:hover { background-color: #1e1e2e; color: #94e2d5; border-color: #94e2d5; }
-#reboot:hover    { background-color: #1e1e2e; color: #f9e2af; border-color: #f9e2af; }
-#shutdown:hover  { background-color: #1e1e2e; color: #f38ba8; border-color: #f38ba8; }

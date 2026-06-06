@@ -1,6 +1,10 @@
 /* =============================================================================
- * waybar style.css — базовая стилизация
- * Catppuccin цвета подключаются автоматически через catppuccin.autoEnable
+ * waybar style.css — Структурный стиль
+ * =============================================================================
+ * Catppuccin цвета подключаются автоматически через catppuccin.autoEnable.
+ * Здесь — только структура: шрифт, размеры, padding, состояния.
+ * Цветовые акценты прописаны ТОЛЬКО там где autoEnable не накрывает
+ * (например #custom-powerprofile — наш свой модуль, его catppuccin не знает).
  * =============================================================================
  */
 
@@ -14,7 +18,8 @@ window#waybar {
     background-color: transparent;
 }
 
-/* Три "кармана" модулей: левый, центральный, правый */
+/* Три "кармана" модулей: левый, центральный, правый.
+   Полупрозрачный фон удерживаем — иначе бар сольётся с обоями. */
 .modules-left,
 .modules-center,
 .modules-right {
@@ -24,23 +29,17 @@ window#waybar {
     margin:        4px;
 }
 
-/* Воркспейсы */
+/* Воркспейсы — состояния (active/urgent) catppuccin подцветит сам */
 #workspaces button {
     padding:    0 6px;
-    color:      #cdd6f4;
     background: transparent;
 }
 
 #workspaces button.active {
-    color:       #cba6f7;
     font-weight: bold;
 }
 
-#workspaces button.urgent {
-    color: #f38ba8;
-}
-
-/* Общий стиль для всех правых модулей */
+/* Общий padding для всех правых модулей — без цветов */
 #clock,
 #cpu,
 #memory,
@@ -50,40 +49,17 @@ window#waybar {
 #bluetooth,
 #backlight,
 #tray,
-#window {
+#window,
+#custom-powerprofile {
     padding: 0 8px;
-    color:   #cdd6f4;
 }
 
-/* Состояния батареи */
-#battery.warning  { color: #f9e2af; }   /* жёлтый */
-#battery.critical { color: #f38ba8; }   /* красный */
-
-/* Звук замьючен — серый */
-#pulseaudio.muted { color: #6c7086; }
-
-/* Сеть отключена — серый, не красный (тише визуально) */
-#network.disconnected,
-#network.disabled {
-    color: #6c7086;
-}
-
-/* Bluetooth выключен — серый */
-#bluetooth.disabled,
-#bluetooth.off {
-    color: #6c7086;
-}
-
-/* Bluetooth подключено устройство — мауве акцент */
-#bluetooth.connected {
-    color: #cba6f7;
-}
-
-/* Tray — для systray-апплетов (nm-applet, blueman-applet и т.п.) */
-#tray > .passive {
-    -gtk-icon-effect: dim;
-}
-
-#tray > .needs-attention {
-    -gtk-icon-effect: highlight;
-}
+/* ────────────────────────────────────────────────────────────────────────────
+ * Power profile (custom модуль — catppuccin не знает о нём)
+ * Цвет иконки меняется по текущему профилю.
+ * Цвета — стандартные Catppuccin Mocha; для Latte autoEnable не переопределит,
+ * но в светлой теме они тоже читабельны.
+ * ──────────────────────────────────────────────────────────────────────────── */
+#custom-powerprofile.performance { color: #fab387; }   /* peach   — горячо */
+#custom-powerprofile.balanced    { color: #b4befe; }   /* lavender — нейтрально */
+#custom-powerprofile.power-saver { color: #a6e3a1; }   /* green   — эконом */

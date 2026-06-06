@@ -2,6 +2,72 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.8] — 2026-06-06
+
+Bug-fix wave: доставка waybar-интеграции power-profiles-daemon, чистка
+мёртвой обвязки hypridle на server профиле, удаление хардкоднутых
+Catppuccin-цветов которые конфликтовали с `catppuccin.autoEnable`.
+
+### Fixed
+- **Waybar `custom/powerprofile` модуль доставлен.** В CHANGELOG v0.1.7 он
+  был заявлен, но в реальном `waybar/config.jsonc` отсутствовал — скрипт
+  `powerprofile.sh` лежал в репо, но никто его не вызывал. Теперь модуль
+  присутствует между `tray` и `backlight`, показывает иконку текущего
+  профиля (↑/=/↓), циклит по ЛКМ, обновляется каждые 5 секунд, есть tooltip.
+- **`hypridle` больше не запускается на server профиле.** Раньше
+  `exec-once = hypridle` стоял в общем `autostart.conf` и читал почти
+  пустой `idle/server.conf`. Теперь запуск перенесён в
+  `conf/profile/laptop.conf` и `conf/profile/desktop.conf`; на server
+  демон не стартует, и `hypridle.conf` туда вообще не копируется
+  (см. `modules/user/ui/hyprland.nix` — условное `lib.optionalAttrs`).
+- **Скрипт `powerprofile.sh` получил подкоманду `json`** — выдаёт JSON
+  для waybar custom-module с полями `text` (иконка), `tooltip` (полное
+  название), `class` (CSS-класс для цвета).
+
+### Removed
+- Хардкоднутые Catppuccin-цвета (`#cba6f7`, `#cdd6f4`, `#f9e2af`, `#f38ba8`,
+  `#6c7086`, `#94e2d5`, и т.д.) из `waybar/style.css` для модулей
+  `#workspaces`, `#battery.warning/critical`, `#pulseaudio.muted`,
+  `#network.disconnected/disabled`, `#bluetooth.disabled/off/connected`,
+  и общего блока цветов модулей. Эти цвета подставляются
+  `catppuccin.autoEnable` автоматически — хардкод мешал смене акцента
+  через `settings.themeAccent`.
+- Тот же хардкод убран из `wlogout/style.css` — блоки
+  `#lock`/`#logout`/`#suspend`/`#hibernate`/`#reboot`/`#shutdown` больше
+  не задают свои цвета. autoEnable красит сам через мауве-акцент.
+
+### Added
+- Стиль `#custom-powerprofile.<class>` в `waybar/style.css` — цвет
+  иконки power-profile меняется в зависимости от текущего режима
+  (peach = performance, lavender = balanced, green = power-saver).
+  Это единственное место в стиле где остался цветовой хардкод — catppuccin
+  не знает о нашем custom-модуле и его подкрасить некому.
+
+### Changed
+- Комментарий про `clickfinger_behavior` в `input.conf` уточнён — это
+  не bool «включить/выключить тачпад», а выбор между zone-based и
+  clickfinger-режимами физического клика.
+- `monitors.conf` дополнен пояснительным разделом о том как user.conf
+  переопределяет дефолтный wildcard `monitor=,preferred,auto,auto` —
+  и как при необходимости можно полностью отключить wildcard
+  через `monitor=,disable`.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git fetch upstream
+git merge upstream/main
+nrs
+```
+
+После пересборки и `hyprctl reload` (или Super+Shift+R):
+- В waybar справа от трея должна появиться иконка профиля (↑/=/↓ с цветом)
+- Клик по ней циклит между performance / balanced / power-saver
+- Если у тебя `settings.profile = "server"` — `pidof hypridle` теперь
+  должен вернуть пустоту (демон больше не запущен)
+
+
 ## [0.1.7] — 2026-06-05 (combined)
 
 Большой релиз: Hyprland-полировка + декларативные уведомления + logout-меню +
