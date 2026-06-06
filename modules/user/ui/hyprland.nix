@@ -38,6 +38,19 @@ let
     kbLayout  = kbLayouts;
   };
 
+  # ── hyprlock.conf генерируется из шаблона (v0.4.0+) ─────────────────────
+  # Подставляются Catppuccin цвета по settings.theme и settings.themeAccent.
+  # Поддерживает обе темы (Mocha/Latte) и все 14 акцентов.
+  catppuccinPalette = import ../../../lib/catppuccin-colors.nix;
+  flavor            = if settings.theme == "light" then "latte" else "mocha";
+  c                 = catppuccinPalette.${flavor};
+  hyprlockConf      = pkgs.substituteAll {
+    src        = ../dotfiles/hyprland/hyprlock.conf.in;
+    base_rgb   = c.rgb.base;
+    text_rgb   = c.rgb.text;
+    accent_rgb = c.rgb.${settings.themeAccent};
+  };
+
   # ── Опциональный декларативный user.conf (v0.3.0+) ─────────────────────
   # Если в custom/<hostName>/dotfiles/hypr-user.conf лежит файл — управляем
   # ~/.config/hypr/user.conf декларативно через home-manager (read-only симлинк
@@ -74,7 +87,7 @@ in
 
     # Сопутствующие конфиги Hyprland
     "hypr/hyprpaper.conf".source = ../dotfiles/hyprland/hyprpaper.conf;
-    "hypr/hyprlock.conf".source  = ../dotfiles/hyprland/hyprlock.conf;
+    "hypr/hyprlock.conf".source  = hyprlockConf;
 
     # Pyprland: scratchpads + smart_gaps
     "hypr/pyprland.toml".source  = ../dotfiles/hyprland/pyprland.toml;

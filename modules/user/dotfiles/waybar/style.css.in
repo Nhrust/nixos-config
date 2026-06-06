@@ -1,10 +1,12 @@
 /* =============================================================================
- * waybar style.css — Структурный стиль
+ * waybar style.css — Структурный стиль, theme-aware (v0.4.0+)
  * =============================================================================
- * Catppuccin цвета подключаются автоматически через catppuccin.autoEnable.
- * Здесь — только структура: шрифт, размеры, padding, состояния.
- * Цветовые акценты прописаны ТОЛЬКО там где autoEnable не накрывает
- * (например #custom-powerprofile — наш свой модуль, его catppuccin не знает).
+ * Генерируется из waybar/style.css.in через pkgs.substituteAll
+ * по settings.theme и settings.themeAccent.
+ *
+ * Catppuccin цвета базовых waybar-модулей подключаются автоматически через
+ * catppuccin.autoEnable. Здесь — только структура (шрифт, размеры, padding)
+ * и явные цвета для custom-модулей которые autoEnable не покрывает.
  * =============================================================================
  */
 
@@ -23,7 +25,7 @@ window#waybar {
 .modules-left,
 .modules-center,
 .modules-right {
-    background:    rgba(30, 30, 46, 0.85);
+    background:    rgba(@base_rgb@, 0.85);
     border-radius: 8px;
     padding:       0 12px;
     margin:        4px;
@@ -56,10 +58,9 @@ window#waybar {
 
 /* ────────────────────────────────────────────────────────────────────────────
  * Power profile (custom модуль — catppuccin не знает о нём)
- * Цвет иконки меняется по текущему профилю.
- * Цвета — стандартные Catppuccin Mocha; для Latte autoEnable не переопределит,
- * но в светлой теме они тоже читабельны.
+ * Цвета — семантичные (горячо/нейтрально/эконом), берутся из палитры темы.
+ * При смене theme = "light" автоматически подберутся latte-варианты.
  * ──────────────────────────────────────────────────────────────────────────── */
-#custom-powerprofile.performance { color: #fab387; }   /* peach   — горячо */
-#custom-powerprofile.balanced    { color: #b4befe; }   /* lavender — нейтрально */
-#custom-powerprofile.power-saver { color: #a6e3a1; }   /* green   — эконом */
+#custom-powerprofile.performance { color: #@peach@; }     /* peach   — горячо */
+#custom-powerprofile.balanced    { color: #@lavender@; }  /* lavender — нейтрально */
+#custom-powerprofile.power-saver { color: #@green@; }     /* green   — эконом */

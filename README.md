@@ -153,6 +153,10 @@ themeAccent = "mauve";  # blue / mauve / lavender / teal / pink / sky / sapphire
 Применяется автоматически ко всем поддерживаемым программам: kitty, waybar,
 wofi, helix, bat, fish, GTK, Qt, mako, hyprlock, hyprland borders, обои.
 
+**v0.4.0+:** waybar, wofi и hyprlock полностью **theme-aware** — переключение
+`theme = "light"` корректно подбирает Latte-палитру; смена `themeAccent`
+перекрашивает рамку wofi и outline-поле hyprlock в любой из 14 акцентов.
+
 ## 🔧 Как поменять что-то
 
 Краткая шпаргалка — полная матрица в `docs/CUSTOMIZATION.md`:

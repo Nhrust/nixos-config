@@ -2,6 +2,71 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] — 2026-06-06
+
+Theme-aware CSS/конфиги — устранены последние хардкоды Catppuccin Mocha
+в `wofi/style.css`, `waybar/style.css`, `hyprlock.conf`. Теперь смена
+`settings.theme = "light"` корректно подбирает Latte-палитру, а
+`settings.themeAccent = "blue"` (или любой из 14 акцентов) перекрашивает
+рамку wofi и outline hyprlock-поля. **Не breaking** — поведение по умолчанию
+(Mocha + mauve) сохраняется идентично.
+
+### Added
+
+- **`lib/catppuccin-colors.nix`** — централизованная палитра обеих тем
+  (Mocha + Latte) в двух формах (hex без `#` для CSS, и rgb `"R, G, B"` для
+  `rgba()` / `rgb()`). Все 14 акцентов покрыты в обеих формах. Импортируется
+  модулями для подстановки через `pkgs.substituteAll`.
+
+### Changed
+
+- **`modules/user/dotfiles/wofi/style.css` → `wofi/style.css.in`** — шаблон с
+  placeholder'ами `@base_rgb@`, `@text@`, `@surface0@`, `@surface1@`, `@accent@`.
+  Финальный `~/.config/wofi/style.css` генерируется через
+  `pkgs.substituteAll` с подставленными цветами по `settings.theme` и
+  `settings.themeAccent`.
+- **`modules/user/dotfiles/waybar/style.css` → `waybar/style.css.in`** —
+  шаблон с placeholders `@base_rgb@`, `@peach@`, `@lavender@`, `@green@`
+  (powerprofile цвета — семантичные, всегда peach/lavender/green из текущей
+  палитры независимо от акцента).
+- **`modules/user/dotfiles/hyprland/hyprlock.conf` → `hyprlock.conf.in`** —
+  шаблон с placeholders `@base_rgb@`, `@text_rgb@`, `@accent_rgb@`.
+- **`modules/user/ui/wofi.nix`** — добавлена логика генерации `style.css`
+  через `substituteAll`. Импортирует `lib/catppuccin-colors.nix`.
+- **`modules/user/ui/waybar.nix`** — то же; одновременно переход с
+  `programs.waybar.style = builtins.readFile ...` на `xdg.configFile` для
+  единообразия (config.jsonc по-прежнему статичный).
+- **`modules/user/ui/hyprland.nix`** — генерация `hyprlock.conf` через
+  substituteAll рядом с уже существующей логикой для `input.conf`.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git pull upstream main
+nrs
+```
+
+Внешне ничего не должно поменяться при дефолтных `theme = "dark"` и
+`themeAccent = "mauve"` — палитра Mocha + mauve идентична хардкоду который
+был раньше. Эффект ощутим только если переключить:
+
+```nix
+# hosts/<host>/settings.nix
+theme       = "light";     # теперь wofi/waybar/hyprlock тоже становятся светлыми
+themeAccent = "blue";      # рамка wofi и outline hyprlock получают синий цвет
+```
+
+И `nrs`.
+
+### Что НЕ сделано в этом релизе
+
+- `wlogout/style.css` и `mako` конфиги уже покрыты `catppuccin.autoEnable`
+  напрямую — для них шаблон не нужен.
+- Цвет border'а активного окна Hyprland (`general:col.active_border` в
+  `decoration.conf`) — пока хардкод. Возможный шаг для следующего релиза.
+
+
 ## [0.3.0] — 2026-06-06
 
 Большой релиз: секреты через sops-nix, параметризация `extras/`, опциональные
