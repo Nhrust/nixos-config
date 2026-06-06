@@ -1,6 +1,10 @@
 # Установка
 
-Три пути в зависимости от того где ставишь.
+Три пути в зависимости от того где ставишь:
+
+- **Путь 1** — авторазметка через disko (`diskMode = "wipe"`). Простой, для пустого диска.
+- **Путь 2** — рядом с другой ОС (`diskMode = "existing"`). Ручная разметка через parted.
+- **Путь 3** — виртуальная машина (для теста).
 
 ---
 
@@ -81,72 +85,99 @@ nixos-install --flake "path:.#my-machine"
 reboot
 ```
 
-> 💡 **Почему `path:.#` а не `.#`?** Префикс `path:` говорит Nix читать
-> файлы прямо с диска, минуя git. Без него Nix берёт состояние последнего
-> коммита и не видит `hosts/my-machine/` которая только что появилась
-> (git add без commit для Nix невидим). Через `path:` всё работает сразу,
-> никаких `git commit` посреди установки.
+> 💡 **Почему `path:.#` а не `.#`?** Префикс `path:` говорит Nix читать файлы
+> прямо с диска, минуя git. Без него Nix берёт состояние последнего коммита
+> и не видит `hosts/my-machine/` которая только что появилась (`git add` без
+> `commit` для Nix невидим). Через `path:` всё работает сразу, никаких
+> `git commit` посреди установки.
 
 ---
 
-## Путь 2 — Существующие разделы (`diskMode = "existing"`)
+## Путь 2 — Рядом с другой ОС (`diskMode = "existing"`)
 
-Если у тебя уже разбит диск (двойная загрузка, сохранение данных и т.д.):
+> ⚠️ Если на диске уже стоит GRUB — возможен конфликт. Безопаснее использовать
+> отдельный диск или VM (Путь 3). Также EFI раздел должен иметь флаг `esp`,
+> не только `boot` — иначе systemd-boot не запишет загрузочную запись.
+
+### 2.1 — Разметить диск вручную через parted
 
 ```bash
-# 1. Заполни в settings.nix:
-#      diskMode     = "existing";
-#      diskPartBoot = "/dev/sdX1";  # EFI раздел
-#      diskPartRoot = "/dev/sdX2";  # корневой Btrfs
+parted /dev/nvme0n1
 
-# 2. Disko ОТФОРМАТИРУЕТ ТОЛЬКО diskPartRoot. EFI раздел не трогается.
+# Внутри parted:
+(parted) mklabel gpt              # ТОЛЬКО для пустого диска без таблицы разделов!
+(parted) mkpart ESP fat32 1MiB 1GiB
+(parted) set 1 esp on             # КРИТИЧНО: флаг esp обязателен
+(parted) mkpart root btrfs 1GiB 100%
+(parted) print                    # проверить
+(parted) quit
+
+# Форматируем
+mkfs.vfat -F 32 -n boot /dev/nvme0n1p1
+mkfs.btrfs -L nixos /dev/nvme0n1p2
+
+# Создаём сабволюмы — должны точно совпадать с lib/btrfs-subvolumes.nix
+mount /dev/nvme0n1p2 /mnt
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@nix
+btrfs subvolume create /mnt/@log
+btrfs subvolume create /mnt/@cache
+btrfs subvolume create /mnt/@tmp
+btrfs subvolume create /mnt/@swap
+umount /mnt
+```
+
+> 💡 Если хочешь добавить/убрать сабволюм — поменяй и здесь, и в
+> `lib/btrfs-subvolumes.nix`. Они должны строго совпадать иначе при загрузке
+> система не сможет смонтировать что-то.
+
+### 2.2 — Заполнить settings.nix под existing режим
+
+В `hosts/my-machine/settings.nix`:
+
+```nix
+diskMode     = "existing";
+diskPartBoot = "/dev/nvme0n1p1";
+diskPartRoot = "/dev/nvme0n1p2";
+```
+
+### 2.3 — Смонтировать через disko и установить
+
+```bash
+# 1. Смонтировать через disko (mount, не disko — disko перетёр бы разделы)
 nix --experimental-features "nix-command flakes" run github:nix-community/disko -- \
-  --mode disko --flake .#my-machine
+  --mode mount --flake .#my-machine
 
-# 3. Дальше как в пути 1, начиная с шага 2.
+# 2. Проверь что EFI раздел смонтирован
+mount | grep /mnt/boot
+
+# 3. Сгенерировать железо
 nixos-generate-config --no-filesystems --root /mnt
 cp /mnt/etc/nixos/hardware-configuration.nix hosts/my-machine/hardware.nix
+
+# 4. Установить (path: префикс — см. пояснение в Пути 1)
 nixos-install --flake "path:.#my-machine"
+
+# 5. После установки проверить что загрузочная запись создана:
+efibootmgr -v | grep -i nixos
+# Если записи нет — добавить вручную:
+# bootctl install --esp-path=/mnt/boot
+
 reboot
 ```
 
 ---
 
-## После reboot — что произошло автоматически (v0.1.9+)
+## Путь 3 — Виртуальная машина (рекомендуется для первого теста)
 
-После установки и перезагрузки войди в систему под своим пользователем
-(пароль по умолчанию — `nixos`, сменить через `passwd`).
-
-Сразу после первого логина в HOME уже лежит **готовая копия репо**:
+### QEMU
 
 ```bash
-ls -la ~/nixos-config/
-# flake.nix  modules/  hosts/  lib/  custom/  .git/  и т.д.
-```
-
-Эту папку создал `bootstrap.nix` — активационный скрипт который:
-1. Скопировал исходники флейка из `/nix/store` в `~/nixos-config`
-2. Сделал тебя владельцем (`chown -R`)
-3. Инициализировал git репо, добавил `upstream` remote
-4. Создал первый коммит — но **без** твоих локальных файлов
-   (`hosts/<host>/settings.nix`, `hardware.nix`, `custom/*` — в `.gitignore`)
-
-Это значит:
-- Все твои правки на месте, рабочие, читаются Nix'ом
-- `git status` покажет их как untracked — не в git, не уйдут при `git push`
-- `git pull upstream main` подтянет обновления, не задевая твоё
-
-Ничего копировать руками **не нужно**.
-
----
-
-## Путь 3 — Виртуалка (QEMU/KVM)
-
-Для тестов:
-
-```bash
+# Создать виртуальный диск 40 GB
 qemu-img create -f qcow2 nixos-test.qcow2 40G
 
+# Запустить с ISO
 qemu-system-x86_64 \
   -enable-kvm \
   -m 4096 \
@@ -172,6 +203,34 @@ gpu      = "amd";     # виртуальный QXL/Virtio совместим с 
 Создай новую ВМ через GUI, укажи ISO, выдели 4 GB RAM / 40 GB диск.
 Включи "Customize before install" → выбери UEFI прошивку (OVMF). Без UEFI
 systemd-boot не сможет установиться.
+
+---
+
+## После reboot — что произошло автоматически (v0.1.9+)
+
+После установки и перезагрузки войди в систему под своим пользователем
+(пароль по умолчанию — `nixos`, сменить через `passwd`).
+
+Сразу после первого логина в HOME уже лежит **готовая копия репо**:
+
+```bash
+ls -la ~/nixos-config/
+# flake.nix  modules/  hosts/  lib/  custom/  extras/  .git/  и т.д.
+```
+
+Эту папку создал `bootstrap.nix` — активационный скрипт который:
+1. Скопировал исходники флейка из `/nix/store` в `~/nixos-config`
+2. Сделал тебя владельцем (`chown -R`)
+3. Инициализировал git репо, добавил `upstream` remote
+4. Создал первый коммит — но **без** твоих локальных файлов
+   (`hosts/<host>/settings.nix`, `hardware.nix`, `custom/*` — в `.gitignore`)
+
+Это значит:
+- Все твои правки на месте, рабочие, читаются Nix'ом
+- `git status` покажет их как untracked — не в git, не уйдут при `git push`
+- `git pull upstream main` подтянет обновления, не задевая твоё
+
+Ничего копировать руками **не нужно**.
 
 ---
 

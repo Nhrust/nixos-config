@@ -68,8 +68,10 @@ passwd
 
 ## Опционально через `extras/`
 
+| Модуль | Что включает |
+|---|---|
 | `extras/gaming.nix` | Steam, GameMode, MangoHud, Gamescope, ProtonUP-Qt, Lutris, steam-run |
-| `extras/development.nix` | Podman + docker alias, podman-compose, lazydocker |
+| `extras/development.nix` | Podman + docker alias, podman-compose, lazydocker, dive |
 
 Подключаются в `custom/<host>.nix`:
 
