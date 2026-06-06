@@ -1,0 +1,65 @@
+/* =============================================================================
+ * waybar style.css — Структурный стиль
+ * =============================================================================
+ * Catppuccin цвета подключаются автоматически через catppuccin.autoEnable.
+ * Здесь — только структура: шрифт, размеры, padding, состояния.
+ * Цветовые акценты прописаны ТОЛЬКО там где autoEnable не накрывает
+ * (например #custom-powerprofile — наш свой модуль, его catppuccin не знает).
+ * =============================================================================
+ */
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size:   13px;
+    min-height:  0;
+}
+
+window#waybar {
+    background-color: transparent;
+}
+
+/* Три "кармана" модулей: левый, центральный, правый.
+   Полупрозрачный фон удерживаем — иначе бар сольётся с обоями. */
+.modules-left,
+.modules-center,
+.modules-right {
+    background:    rgba(30, 30, 46, 0.85);
+    border-radius: 8px;
+    padding:       0 12px;
+    margin:        4px;
+}
+
+/* Воркспейсы — состояния (active/urgent) catppuccin подцветит сам */
+#workspaces button {
+    padding:    0 6px;
+    background: transparent;
+}
+
+#workspaces button.active {
+    font-weight: bold;
+}
+
+/* Общий padding для всех правых модулей — без цветов */
+#clock,
+#cpu,
+#memory,
+#battery,
+#network,
+#pulseaudio,
+#bluetooth,
+#backlight,
+#tray,
+#window,
+#custom-powerprofile {
+    padding: 0 8px;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Power profile (custom модуль — catppuccin не знает о нём)
+ * Цвет иконки меняется по текущему профилю.
+ * Цвета — стандартные Catppuccin Mocha; для Latte autoEnable не переопределит,
+ * но в светлой теме они тоже читабельны.
+ * ──────────────────────────────────────────────────────────────────────────── */
+#custom-powerprofile.performance { color: #fab387; }   /* peach   — горячо */
+#custom-powerprofile.balanced    { color: #b4befe; }   /* lavender — нейтрально */
+#custom-powerprofile.power-saver { color: #a6e3a1; }   /* green   — эконом */
