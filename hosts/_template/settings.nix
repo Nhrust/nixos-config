@@ -112,4 +112,21 @@
   # Дефолт (если поле отсутствует): https://github.com/Nhrust/nixos-config.git
   #
   # upstream = "https://github.com/your-name/nixos-config.git";
+
+  # ── Sops secrets — автонастройка при установке (v0.3.1+) ──────────────────
+  # Если задан, bootstrap.nix при первой установке автоматически заполнит
+  # .sops.yaml: вставит этот ключ как admin + добавит host age key из
+  # /etc/ssh/ssh_host_ed25519_key.pub. После этого можно сразу шифровать
+  # секреты без ручной настройки .sops.yaml.
+  #
+  # Получи свой age public key ЗАРАНЕЕ на любой машине:
+  #   ssh-to-age < ~/.ssh/id_ed25519.pub
+  # или сгенерируй отдельный age key:
+  #   nix-shell -p age --run 'age-keygen'
+  #   (private key сохрани в ~/.config/sops/age/keys.txt, public — сюда)
+  #
+  # Если не задано (default "") — bootstrap .sops.yaml не трогает, юзер
+  # настраивает sops руками через `bash scripts/setup-sops.sh` или из docs/SECRETS.md.
+  #
+  # secretsAdminAgePubKey = "age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 }

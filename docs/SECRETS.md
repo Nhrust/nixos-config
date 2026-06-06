@@ -26,6 +26,48 @@
                         └────────────────────────────────────┘
 ```
 
+## ⚡ Автонастройка при установке (рекомендуется)
+
+В **v0.3.1+** есть автоматический путь через `bootstrap.nix`. Юзер не запускает
+никаких интерактивных скриптов — `.sops.yaml` заполняется автоматом во время
+`nixos-install`.
+
+**Подготовка (один раз, перед установкой):**
+
+Получи свой age public key на любой машине где у тебя уже есть ssh:
+
+```fish
+nix-shell -p ssh-to-age --run 'ssh-to-age < ~/.ssh/id_ed25519.pub'
+# → age1abcxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Или сгенерируй отдельный age key:
+
+```fish
+nix-shell -p age --run 'age-keygen -o ~/.config/sops/age/keys.txt'
+# покажет: "Public key: age1..."
+# private сохранён в ~/.config/sops/age/keys.txt — не теряй
+```
+
+**На инсталлере** в `hosts/<host>/settings.nix` заполни:
+
+```nix
+secretsAdminAgePubKey = "age1abcxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+```
+
+И продолжай установку как обычно (`disko` → `nixos-install --flake "path:.#"`
+→ `reboot`).
+
+**После reboot:** `~/nixos-config/.sops.yaml` уже заполнен:
+- твой admin key вместо placeholder
+- `&host_<hostname>` с автоматически полученным host age key
+- активная строка `- *host_<hostname>` в `creation_rules`
+
+Можно сразу создавать первый зашифрованный секрет — раздел ниже.
+
+**Если без автонастройки** (`secretsAdminAgePubKey` не задан): bootstrap не
+трогает `.sops.yaml`. Тогда настраивай руками — следующий раздел.
+
 ## Первый запуск — получение age-ключа
 
 После первой установки хоста (или на текущем хосте), получи его age public key:
