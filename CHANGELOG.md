@@ -2,6 +2,56 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.1.9] — 2026-06-06
+
+Автоматизация bootstrap'а после установки. После `nixos-install` папка
+`~/<user>/nixos-config/` создаётся сама, git репо инициализируется,
+upstream-remote добавляется, локальные файлы (settings.nix, hardware.nix,
+custom/<host>.nix) исключаются из git через новый `.gitignore` в корне.
+
+Это закрывает дыру в INSTALL.md где приходилось руками делать
+`cp -r /root/nixos-config /mnt/home/...` перед reboot.
+
+### Added
+- **`modules/system/bootstrap.nix`** — `system.activationScripts` скрипт,
+  выполняется при `nixos-install` и каждом `nrs`. Идемпотентен: если
+  `~/nixos-config/` уже есть, ничего не делается. При первом запуске:
+  1. Копирует исходники флейка из `/nix/store` в `/home/<username>/nixos-config`
+  2. `chmod -R u+w` + `chown -R <username>:users` (мутабельность + владелец)
+  3. `git init -b main` + `git remote add upstream <url>` + первый коммит
+- **`.gitignore`** в корне репозитория. Исключает:
+  - `hosts/*/settings.nix` (кроме `hosts/_template/settings.nix`)
+  - `hosts/*/hardware.nix` (кроме `hosts/_template/hardware.nix`)
+  - `custom/*.nix` (кроме `_example.nix` и `README.md`)
+  - `custom/*/` (папки расширенного формата)
+  - Стандартный мусор (`result`, `.direnv/`, `*.bak`, `*.swp`)
+- **Опциональное поле `settings.upstream`** в `hosts/_template/settings.nix`.
+  По умолчанию (если не задано) — `https://github.com/Nhrust/nixos-config.git`.
+
+### Changed
+- `lib/mkHost.nix` — `bootstrap.nix` добавлен в список модулей хоста.
+- `docs/INSTALL.md` — переписан:
+  - Команда установки теперь `nixos-install --flake "path:.#<host>"`
+    (с префиксом `path:`, чтобы Nix читал с диска, а не из git HEAD).
+    Это убирает ловушку `does not provide attribute "<host>"` которая
+    возникала когда юзер `git add`-ил файлы но не делал `git commit`.
+  - Убран ручной `cp -r /root/nixos-config /mnt/home/...` перед reboot.
+- `docs/UPDATING.md` — концепция переписана: локальные файлы теперь
+  не в git, а не «в git но никто их не трогает». Добавлен раздел
+  «Куда уходит `git push`» и про nested-private-repo паттерн.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git fetch upstream && git merge upstream/main
+# Убрать из tracking'а локальные файлы которые раньше были в git:
+git rm --cached hosts/<host>/settings.nix hosts/<host>/hardware.nix
+git rm --cached custom/<host>.nix 2>/dev/null || true
+git commit -m "stop tracking local files (v0.1.9 gitignore)"
+nrs
+```
+
 ## [0.1.8] — 2026-06-06
 
 Bug-fix wave: доставка waybar-интеграции power-profiles-daemon, чистка
@@ -13,59 +63,29 @@ Catppuccin-цветов которые конфликтовали с `catppuccin
   был заявлен, но в реальном `waybar/config.jsonc` отсутствовал — скрипт
   `powerprofile.sh` лежал в репо, но никто его не вызывал. Теперь модуль
   присутствует между `tray` и `backlight`, показывает иконку текущего
-  профиля (↑/=/↓), циклит по ЛКМ, обновляется каждые 5 секунд, есть tooltip.
+  профиля (↑/=/↓), циклит по ЛКМ, обновляется каждые 5 секунд.
 - **`hypridle` больше не запускается на server профиле.** Раньше
   `exec-once = hypridle` стоял в общем `autostart.conf` и читал почти
   пустой `idle/server.conf`. Теперь запуск перенесён в
   `conf/profile/laptop.conf` и `conf/profile/desktop.conf`; на server
-  демон не стартует, и `hypridle.conf` туда вообще не копируется
-  (см. `modules/user/ui/hyprland.nix` — условное `lib.optionalAttrs`).
+  демон не стартует, и `hypridle.conf` туда не копируется.
 - **Скрипт `powerprofile.sh` получил подкоманду `json`** — выдаёт JSON
-  для waybar custom-module с полями `text` (иконка), `tooltip` (полное
-  название), `class` (CSS-класс для цвета).
+  для waybar custom-module (text/tooltip/class).
 
 ### Removed
-- Хардкоднутые Catppuccin-цвета (`#cba6f7`, `#cdd6f4`, `#f9e2af`, `#f38ba8`,
-  `#6c7086`, `#94e2d5`, и т.д.) из `waybar/style.css` для модулей
+- Хардкоднутые Catppuccin-цвета из `waybar/style.css` для модулей
   `#workspaces`, `#battery.warning/critical`, `#pulseaudio.muted`,
-  `#network.disconnected/disabled`, `#bluetooth.disabled/off/connected`,
-  и общего блока цветов модулей. Эти цвета подставляются
-  `catppuccin.autoEnable` автоматически — хардкод мешал смене акцента
-  через `settings.themeAccent`.
-- Тот же хардкод убран из `wlogout/style.css` — блоки
-  `#lock`/`#logout`/`#suspend`/`#hibernate`/`#reboot`/`#shutdown` больше
-  не задают свои цвета. autoEnable красит сам через мауве-акцент.
+  `#network.disconnected/disabled`, `#bluetooth.*`. Catppuccin autoEnable
+  подставляет их сам — хардкод мешал смене акцента.
+- Тот же хардкод убран из `wlogout/style.css`.
 
 ### Added
-- Стиль `#custom-powerprofile.<class>` в `waybar/style.css` — цвет
-  иконки power-profile меняется в зависимости от текущего режима
-  (peach = performance, lavender = balanced, green = power-saver).
-  Это единственное место в стиле где остался цветовой хардкод — catppuccin
-  не знает о нашем custom-модуле и его подкрасить некому.
+- Стиль `#custom-powerprofile.<class>` в `waybar/style.css` — цвет иконки
+  меняется по режиму (peach/lavender/green).
 
 ### Changed
-- Комментарий про `clickfinger_behavior` в `input.conf` уточнён — это
-  не bool «включить/выключить тачпад», а выбор между zone-based и
-  clickfinger-режимами физического клика.
-- `monitors.conf` дополнен пояснительным разделом о том как user.conf
-  переопределяет дефолтный wildcard `monitor=,preferred,auto,auto` —
-  и как при необходимости можно полностью отключить wildcard
-  через `monitor=,disable`.
-
-### Что делать другу при обновлении
-
-```fish
-cd ~/nixos-config
-git fetch upstream
-git merge upstream/main
-nrs
-```
-
-После пересборки и `hyprctl reload` (или Super+Shift+R):
-- В waybar справа от трея должна появиться иконка профиля (↑/=/↓ с цветом)
-- Клик по ней циклит между performance / balanced / power-saver
-- Если у тебя `settings.profile = "server"` — `pidof hypridle` теперь
-  должен вернуть пустоту (демон больше не запущен)
+- Комментарии в `input.conf` (про `clickfinger_behavior`) и `monitors.conf`
+  (про override через user.conf) уточнены.
 
 
 ## [0.1.7] — 2026-06-05 (combined)

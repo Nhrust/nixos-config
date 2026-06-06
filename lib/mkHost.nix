@@ -60,6 +60,7 @@ nixpkgs.lib.nixosSystem {
     ../modules/system/main.nix
     ../modules/system/variables.nix
     ../modules/system/power-profiles.nix
+    ../modules/system/bootstrap.nix          # ← v0.1.9: автокопия репо в HOME
 
     # UI: сессия, аудио, шрифты
     ../modules/system/ui/session.nix

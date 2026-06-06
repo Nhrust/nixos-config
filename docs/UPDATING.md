@@ -3,10 +3,16 @@
 ## Концепция
 
 Репо разделён на две части:
-- **Файлы автора** — `modules/`, `flake.nix`, `lib/`. Обновляется через `git pull upstream`.
-- **Ваши файлы** — `hosts/<имя>/`, `custom/<имя>.nix`. Никто кроме тебя это не меняет.
 
-Поскольку обновления никогда не затрагивают твою папку хоста — конфликтов merge быть не должно.
+- **Файлы автора** — `modules/`, `flake.nix`, `lib/`, `docs/`.
+  Обновляется через `git pull upstream main`. Идёт в git, ходит между машинами.
+- **Твои локальные файлы** — `hosts/<имя>/settings.nix`, `hosts/<имя>/hardware.nix`,
+  `custom/<имя>.nix` или `custom/<имя>/`. **Не отслеживаются git'ом**
+  (исключены через `.gitignore` в корне репо). Существуют только на твоей
+  машине, не уходят при `git push`, не конфликтуют при `git pull`.
+
+Поскольку git вообще не видит твои локальные файлы — конфликтов при
+обновлении быть не может.
 
 ## Получить обновления
 
@@ -16,7 +22,10 @@ git fetch upstream
 git merge upstream/main
 ```
 
-Если есть конфликты — почти всегда это твои локальные правки в `modules/`. Не делай так.
+Или одной командой:
+```bash
+git pull upstream main
+```
 
 ## Применить обновления
 
@@ -24,7 +33,9 @@ git merge upstream/main
 nrs
 ```
 
-Это вызовет `nixos-rebuild switch` с новыми модулями. Старое поколение остаётся в меню загрузчика — можно откатиться если что-то сломалось.
+Это вызовет `nixos-rebuild switch` через `path:` (см. алиас в `fish.nix`)
+с новыми модулями. Старое поколение остаётся в меню загрузчика — можно
+откатиться если что-то сломалось.
 
 ## Обновить зависимости (nixpkgs и т.д.)
 
@@ -68,3 +79,36 @@ nrs                       # применить
 # Раз в месяц
 ngc                       # почистить store
 ```
+
+## Куда уходит `git push`?
+
+Если ты сделал свой fork моего репо на github (или gitea/gitlab):
+
+```bash
+git remote add origin git@github.com:<твоё-имя>/nixos-config.git
+git push -u origin main
+```
+
+`upstream` остаётся указывать на мой репо (источник обновлений).
+`origin` — на твой fork.
+
+Благодаря `.gitignore`, в `origin` улетают только публичные изменения.
+Твои `settings.nix`, `hardware.nix`, `custom/*` остаются исключительно
+на твоей машине.
+
+## Что если я хочу свои hosts/<>/settings всё-таки версионировать?
+
+Стандартный паттерн — отдельный приватный git внутри `hosts/<имя>/`:
+
+```bash
+cd ~/nixos-config/hosts/my-machine
+git init
+git remote add origin git@private-server:nixos-private.git
+git add settings.nix hardware.nix
+git commit -m "my-machine settings"
+git push -u origin main
+```
+
+Внешний (upstream) репо игнорирует папки где есть свой `.git/` — это
+стандартное поведение git. Внутренний (твой приватный) ходит на свой
+приватный сервер.
