@@ -14,6 +14,12 @@
     QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";          # без двойных рамок
     CLUTTER_BACKEND                     = "wayland";    # GTK-based
 
+    # Qt theming (для Kvantum, см. modules/user/theme.nix)
+    # Дублируем на системном уровне чтобы exec-once-приложения из Hyprland
+    # (запускающиеся ДО полной home-manager сессии) тоже видели эти переменные.
+    QT_QPA_PLATFORMTHEME = "kvantum";
+    QT_STYLE_OVERRIDE    = "kvantum";  # для приложений игнорирующих PLATFORMTHEME
+
     # XDG (Hyprland задаёт это и сам, но дублируем для надёжности)
     XDG_CURRENT_DESKTOP = "Hyprland";
     XDG_SESSION_TYPE    = "wayland";
