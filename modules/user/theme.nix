@@ -27,10 +27,6 @@ in
       name    = gtkThemeName;
       package = pkgs.adw-gtk3;
     };
-    iconTheme = {
-      name    = iconThemeName;
-      package = pkgs.papirus-icon-theme;
-    };
     cursorTheme = {
       name    = "Bibata-Modern-Classic";
       package = pkgs.bibata-cursors;
@@ -54,12 +50,4 @@ in
     gtk.enable = true;
     x11.enable = true;
   };
-
-  home.packages = with pkgs; [
-    nwg-look
-    libsForQt5.qt5ct
-    qt6ct
-    libsForQt5.qtstyleplugin-kvantum
-    kdePackages.qtstyleplugin-kvantum
-  ];
 }
