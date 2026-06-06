@@ -15,6 +15,14 @@
     };
 
     catppuccin.url = "github:catppuccin/nix";
+
+    # ── Секреты через sops-nix (v0.3.0+) ─────────────────────────────────
+    # Зашифрованные YAML в secrets/, расшифровка на хосте через age-ключ,
+    # который выводится из /etc/ssh/ssh_host_ed25519_key. См. docs/SECRETS.md.
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs@{ self, nixpkgs, ... }:
@@ -71,6 +79,11 @@
 
           # Hyprland утилиты для отладки
           hyprland
+
+          # Секреты (sops + age + ssh-to-age для конвертации ssh ключа в age)
+          sops
+          age
+          ssh-to-age
         ];
 
         shellHook = ''

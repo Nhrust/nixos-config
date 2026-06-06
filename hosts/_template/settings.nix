@@ -54,6 +54,29 @@
   printing       = false; # CUPS + Avahi
   bluetooth      = false; # hardware.bluetooth + blueman
 
+  # ── Gaming stack (v0.3.0+) ────────────────────────────────────────────────
+  # Активируется флагом enable. Подопции — точечный контроль того что внутри.
+  # См. extras/gaming.nix для деталей.
+  gaming = {
+    enable    = false;  # главный выключатель — false = весь блок игнорируется
+    steam     = true;   # Steam клиент + gamescopeSession
+    gamemode  = true;   # CPU performance + nice priority во время игры
+    mangohud  = true;   # FPS оверлей
+    protonup  = true;   # GUI для установки Proton-GE версий
+    gamescope = false;  # композитор Valve — для проблемных игр с масштабом
+    lutris    = false;  # игры не-Steam (Epic, GoG, эмуляторы)
+    steamRun  = false;  # FHS обёртка для запуска чужих бинарей
+  };
+
+  # ── Development stack (v0.3.0+) ───────────────────────────────────────────
+  # Контейнеры и dev-tools. См. extras/development.nix.
+  development = {
+    enable        = false;  # главный выключатель
+    podman        = true;   # rootless контейнеры + docker CLI alias
+    podmanCompose = true;   # docker-compose синтаксис через podman
+    lazydocker    = false;  # TUI для управления контейнерами
+  };
+
   # ── Питание ───────────────────────────────────────────────────────────────
   # powerProfile при загрузке:
   #   null            — auto: laptop → balanced, desktop/server → performance

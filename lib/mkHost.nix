@@ -17,7 +17,7 @@
 { name }:
 
 let
-  inherit (inputs) nixpkgs home-manager disko catppuccin;
+  inherit (inputs) nixpkgs home-manager disko catppuccin sops-nix;
   lib = nixpkgs.lib;
 
   hostPath = ../hosts + "/${name}";
@@ -89,6 +89,11 @@ nixpkgs.lib.nixosSystem {
     # ── Catppuccin (системный уровень — консоль, plymouth и т.д.) ───────
     catppuccin.nixosModules.catppuccin
 
+    # ── Секреты (sops-nix, v0.3.0) ──────────────────────────────────────
+    # Активируется через настройку modules/system/sops.nix; если secrets/
+    # пустая — модуль no-op.
+    sops-nix.nixosModules.sops
+
     # ── Железо конкретной машины ────────────────────────────────────────
     (hostPath + "/hardware.nix")
 
@@ -102,7 +107,7 @@ nixpkgs.lib.nixosSystem {
     {
       home-manager.useGlobalPkgs    = true;
       home-manager.useUserPackages  = true;
-      home-manager.extraSpecialArgs = { inherit inputs settings; };
+      home-manager.extraSpecialArgs = { inherit inputs settings; hostName = name; };
       home-manager.sharedModules    = [ catppuccin.homeModules.catppuccin ];
       home-manager.users.${settings.username} = import ../modules/user/home.nix;
     }

@@ -16,7 +16,7 @@
 # Скрипты в scripts/ копируются как исполняемые.
 # Плагины: pyprland (scratchpads + smart_gaps), hyprshade (blue-light).
 # =============================================================================
-{ lib, pkgs, settings, ... }:
+{ lib, pkgs, settings, inputs, hostName, ... }:
 let
   profile     = settings.profile;
   profileSrc  = ../dotfiles/hyprland/conf/profile + "/${profile}.conf";
@@ -37,6 +37,14 @@ let
     src       = ../dotfiles/hyprland/conf/input.conf.in;
     kbLayout  = kbLayouts;
   };
+
+  # ── Опциональный декларативный user.conf (v0.3.0+) ─────────────────────
+  # Если в custom/<hostName>/dotfiles/hypr-user.conf лежит файл — управляем
+  # ~/.config/hypr/user.conf декларативно через home-manager (read-only симлинк
+  # из /nix/store). Иначе — fallback на mutable активацию (создаётся один раз
+  # из template, дальше юзер правит руками в $HOME).
+  customUserConf    = inputs.self + "/custom/${hostName}/dotfiles/hypr-user.conf";
+  hasCustomUserConf = builtins.pathExists customUserConf;
 in
 {
   # ── Плагины Hyprland-стека ────────────────────────────────────────────────
@@ -87,17 +95,23 @@ in
   } // (lib.optionalAttrs needsHypridle {
     # hypridle конфиг только для laptop/desktop
     "hypr/hypridle.conf".source = hypridleSrc;
+  }) // (lib.optionalAttrs hasCustomUserConf {
+    # v0.3.0+: декларативный user.conf из custom/<host>/dotfiles/
+    # Read-only симлинк из /nix/store — переносится между машинами вместе с репо.
+    "hypr/user.conf".source = customUserConf;
   });
 
-  # ── user.conf: создаётся один раз при первой установке ────────────────────
-  home.activation.hyprlandUserConf =
-    lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # ── user.conf mutable fallback ────────────────────────────────────────────
+  # Активируется ТОЛЬКО когда нет custom/<host>/dotfiles/hypr-user.conf.
+  # Создаётся один раз из template, дальше юзер правит руками в $HOME.
+  home.activation.hyprlandUserConf = lib.mkIf (!hasCustomUserConf)
+    (lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -f "$HOME/.config/hypr/user.conf" ]; then
         mkdir -p "$HOME/.config/hypr"
         cat ${../dotfiles/hyprland/user.conf.template} > "$HOME/.config/hypr/user.conf"
         chmod u+w "$HOME/.config/hypr/user.conf"
       fi
-    '';
+    '');
 
   # ── Дефолтная обоина: создаётся один раз при первой установке ─────────────
   home.activation.defaultWallpaper =

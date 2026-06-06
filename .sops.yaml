@@ -1,0 +1,34 @@
+# =============================================================================
+# .sops.yaml — Конфигурация sops для шифрования файлов в secrets/
+# =============================================================================
+# Каждый ключ ниже — age public key, к которому будут зашифрованы файлы.
+# Чтобы добавить новый хост:
+#   1. На хосте получи его age public key (выводится из ssh host key):
+#        sudo ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub
+#   2. Добавь в keys: ниже строкой `&host_<имя> age1...`
+#   3. Добавь его в creation_rules → key_groups → age:
+#   4. Запусти `sops updatekeys secrets/default.yaml` чтобы перешифровать
+#      существующие секреты с новым ключом
+#
+# Подробная инструкция — docs/SECRETS.md
+# =============================================================================
+keys:
+  # Твой персональный ключ — для редактирования секретов с любой машины
+  # (получи через `age-keygen` или `ssh-to-age` из ~/.ssh/id_ed25519.pub).
+  # Замени placeholder ниже на свой реальный age public key:
+  - &user     age1REPLACE_WITH_YOUR_OWN_AGE_KEY
+
+  # Ключи хостов — добавляй по одному на каждую машину.
+  # Получи через `sudo ssh-to-age < /etc/ssh/ssh_host_ed25519_key.pub`.
+  # Закомментируй ниже placeholder и раскомментируй реальные после получения:
+  # - &host_pc       age1HOST_PC_PUBLIC_KEY
+  # - &host_laptop   age1HOST_LAPTOP_PUBLIC_KEY
+
+creation_rules:
+  # Файлы secrets/*.yaml шифруются для admin + всех хостов
+  - path_regex: secrets/.*\.yaml$
+    key_groups:
+      - age:
+          - *user
+          # - *host_name       # раскомментируй когда добавишь реальный host key
+          

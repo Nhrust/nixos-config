@@ -2,6 +2,108 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] — 2026-06-06
+
+Большой релиз: секреты через sops-nix, параметризация `extras/`, опциональные
+декларативные dotfiles в `custom/<host>/`, документация по утилитам и секретам.
+**Не breaking** для существующих пользователей — все новые опции с дефолтами
+которые сохраняют текущее поведение.
+
+### Added
+
+**Секреты через sops-nix**
+- **`modules/system/sops.nix`** — настройка sops с автодетектом ssh host key
+  как age private key. Условная активация: если `secrets/default.yaml` не
+  существует, модуль no-op (для тех кто пока не использует секреты).
+- **`.sops.yaml`** в корне — конфиг шифрования с placeholder'ами для
+  admin-ключа и host-ключей. Заполняется по инструкции из `docs/SECRETS.md`.
+- **`secrets/_example.yaml`** — структурированный шаблон секретов
+  (ssh/wifi/api/services разделы) как ориентир. Сам файл gitignored,
+  реальный `secrets/default.yaml` создаётся по шаблону + sops-encrypt.
+- **`flake.nix`** — добавлен `sops-nix` input. В devShell добавлены
+  `sops`, `age`, `ssh-to-age` для работы с секретами.
+- **`docs/SECRETS.md`** — полный туториал (193 строки):
+  получение age-ключа, заполнение `.sops.yaml`, первый секрет,
+  использование в Nix-модулях, добавление нового хоста, troubleshooting.
+
+**Параметризация `extras/`**
+- **`settings.gaming.*`** в `hosts/_template/settings.nix` — `enable` +
+  подопции `steam`/`gamemode`/`mangohud`/`protonup`/`gamescope`/`lutris`/`steamRun`.
+  Дефолты (когда `enable = true`): steam/gamemode/mangohud/protonup `=true`,
+  остальные `=false`.
+- **`settings.development.*`** — `enable` + подопции `podman`/`podmanCompose`/`lazydocker`.
+- **`extras/gaming.nix` переписан** под `lib.mkMerge` + `lib.mkIf cfg.<подопция>`
+  для каждого компонента. Когда `gaming.enable = false`, модуль no-op целиком.
+- **`extras/development.nix` переписан** аналогично.
+- **`extras/README.md`** обновлён под параметризованный подход + пример
+  как создать свой `extras/<name>.nix` с собственными settings.
+
+**Опциональные декларативные dotfiles в `custom/<host>/dotfiles/`**
+- Если в `custom/<host>/dotfiles/hypr-user.conf` лежит файл — `~/.config/hypr/user.conf`
+  управляется декларативно через home-manager (симлинк из /nix/store, обновляется
+  через `nrs`). Иначе — fallback на текущую mutable активацию.
+- Аналогично для `custom/<host>/dotfiles/fish-local.fish` → `~/.config/fish/conf.d/local.fish`.
+- Это позволяет **переносить личные настройки между машинами** через git
+  одновременно с защитой mutable-режима для тех кто пока не хочет
+  переходить на декларативный путь.
+
+**Обнаружимость утилит**
+- **`docs/TOOLS.md`** (200 строк) — каталог всех утилит из коробки + cheatsheet
+  «хочу X → команда Y». CLI замены (eza, bat, fd, ripgrep, zoxide, duf, dust),
+  TUI инструменты (fzf, yazi, btop, helix, lazygit, direnv), Hyprland-стек
+  (pyprland, hyprshade, wlogout, mako, wofi), extras-опции, fish-хоткеи.
+
+### Changed
+
+- **`lib/mkHost.nix`** — `home-manager.extraSpecialArgs` получает `hostName`
+  (нужно для обнаружения per-host dotfiles в `custom/<host>/dotfiles/`).
+  Подключён `sops-nix.nixosModules.sops`.
+- **`modules/user/ui/hyprland.nix`** — принимает `inputs` + `hostName`,
+  детектит `custom/<host>/dotfiles/hypr-user.conf`. Mutable активация
+  через `home.activation.hyprlandUserConf` теперь обёрнута в
+  `lib.mkIf (!hasCustomUserConf)` — не срабатывает если есть custom-версия.
+- **`modules/user/shell/fish.nix`** — то же для `local.fish`. **Дополнительно:**
+  - Алиасы `nrs`/`nrt`/`nrb`/`nfu` переписаны через `path:` префикс
+    (`sudo nixos-rebuild switch --flake "path:$HOME/nixos-config#$(hostname)"`).
+    Это закрывает старую ловушку «правки без коммита не применяются».
+  - Добавлен алиас `nrt` (test) которого раньше не было.
+  - Добавлен `lg = "lazygit"`.
+  - Подключена интеграция fzf с fish (`Ctrl+R` для истории, `Ctrl+T` для
+    файлов, `Alt+C` для cd-fuzzy).
+- **`.gitignore`** — добавлены `secrets/_*.yaml`, `*.dec.yaml`, `sops-key.txt`.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git pull upstream main
+nrs
+```
+
+После этого:
+- **Алиасы `nrs`/`nrt`/`nrb` теперь работают через `path:`** — твои правки
+  применяются мгновенно без коммита (если ты раньше делал `git commit` после
+  каждого изменения settings.nix — больше не нужно).
+- **`gaming` и `development` в settings.nix не задеты** — если ты не описал
+  эти блоки, дефолты `enable = false`, и `extras/gaming.nix` / `extras/development.nix`
+  игнорируются (поведение как было). Чтобы включить — добавь блок в
+  `hosts/<host>/settings.nix` и подключи `imports = [ ../extras/gaming.nix ];`
+  в `custom/<host>.nix`.
+- **Секреты** опциональны — пока нет `secrets/default.yaml`, sops-модуль
+  ничего не делает. См. `docs/SECRETS.md` если хочешь начать использовать.
+
+### Что НЕ сделано в этом релизе
+
+- **Алиасы fish-local + hypr-user.conf по умолчанию не декларативные** —
+  чтобы перевести на декларативный режим, нужно создать `custom/<host>/dotfiles/`
+  вручную. Это сознательное решение — большинство пользователей хочет
+  оставить mutable правки.
+- **`.sops.yaml` в репо с placeholder'ом** — это значит конфиг шифрования
+  пустой пока пользователь не заменит `age1REPLACE` на свой ключ. До этого
+  попытка `sops --encrypt` упадёт с ошибкой. Это намеренно — без подмены
+  никто случайно не зашифрует секрет публичным placeholder'ом.
+
+
 ## [0.2.0] — 2026-06-06
 
 Большой релиз: DX + архитектурный рефакторинг + расширяемость + полностью
