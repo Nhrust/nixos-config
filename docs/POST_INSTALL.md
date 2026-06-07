@@ -4,7 +4,7 @@
 
 ## 1. Войти в систему
 
-Логин: `admin` (или твоё имя из `settings.nix`)
+Логин: `user` (или твоё имя из `settings.nix`)
 Пароль: `nixos` (initialPassword)
 
 Запустится Hyprland.

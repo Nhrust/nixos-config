@@ -23,6 +23,8 @@ hosts/*/hardware.nix
 # Пример и README остаются в репо.
 custom/*.nix
 custom/*/
+!custom/_examples/
+!custom/_examples/**
 !custom/_example.nix
 !custom/README.md
 
