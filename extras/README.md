@@ -8,26 +8,34 @@
 
 | Модуль | Что включает | Параметризация |
 |---|---|---|
-| `gaming.nix` | Steam, GameMode, MangoHud, Gamescope, ProtonUP-Qt, Lutris, steam-run, Wine | `settings.gaming.*` (v0.3.0) |
-| `development.nix` | Podman + docker-CLI alias, podman-compose, lazydocker, dive | `settings.development.*` (v0.3.0) |
+| `gaming.nix` | Steam, GameMode, MangoHud, Gamescope, ProtonUP-Qt, Lutris, steam-run, Wine | `settings.gaming.*` |
+| `development.nix` | Podman + docker-CLI alias, podman-compose, lazydocker, dive | `settings.development.*` |
 
-## Как использовать
+## Как использовать (v0.5.0+)
 
-### Шаг 1: Подключи модуль в `custom/<host>.nix`
+Каждый extras-модуль имеет соответствующий файл-обёртку в `hosts/_template/`:
+- `extras-gaming.nix` — подключает `extras/gaming.nix`
+- `extras-development.nix` — подключает `extras/development.nix`
+
+### Шаг 1: Раскомментируй импорт в `hosts/<host>/default.nix`
+
+Когда копируешь `hosts/_template` под имя своей машины, в `default.nix`
+у тебя уже готовый список `imports`. Просто раскомментируй нужные:
 
 ```nix
+# hosts/my-laptop/default.nix
 { ... }: {
   imports = [
-    ../extras/gaming.nix
-    ../extras/development.nix
+    ./packages.nix
+    ./services.nix
+    ./aliases.nix
+    ./extras-gaming.nix          # ← раскомментируй
+    ./extras-development.nix     # ← раскомментируй
   ];
 }
 ```
 
-Это **просто импортирует** код. Сам по себе он ничего не активирует —
-все блоки внутри обёрнуты в `lib.mkIf cfg.enable`.
-
-### Шаг 2: Активируй и сконфигурируй в `hosts/<host>/settings.nix`
+### Шаг 2: Активируй и настрой в `hosts/<host>/settings.nix`
 
 ```nix
 gaming = {
@@ -49,21 +57,21 @@ development = {
 };
 ```
 
-Дефолты подопций (когда блок `gaming`/`development` в `settings.nix`
-не задан полностью) описаны в начале `extras/<имя>.nix` в `let defaults = ...`.
+Дефолты подопций (когда блок `gaming`/`development` в `settings.nix` не задан
+полностью) описаны в начале `extras/<имя>.nix` в `let defaults = ...`.
 
 ## Зачем «всегда импортировать, а активировать через settings»?
 
-Альтернатива была — подключать `imports = [ ../extras/gaming.nix ]` только
+Альтернатива была — подключать `imports = [ ../../extras/gaming.nix ]` только
 когда нужно. Но это менее удобно:
-- Чтобы временно выключить — надо править `custom/<host>.nix`
+- Чтобы временно выключить — надо править `default.nix`
 - Чтобы попробовать одну подопцию — надо помнить весь стек
 
 С текущим подходом:
-- Импорт один раз и навсегда
+- Импорт один раз и навсегда в `default.nix` через `extras-gaming.nix`
 - Включение/отключение через `settings.gaming.enable = true/false`
 - Тонкая настройка через `settings.gaming.<подопция>`
-- Settings.nix остаётся **единым местом** где описаны все параметры машины
+- `settings.nix` остаётся **единым местом** где описаны все параметры машины
 
 ## Как добавить свой extras
 
@@ -86,5 +94,18 @@ lib.mkIf cfg.enable {
 }
 ```
 
-И подключи как все остальные. Если получится универсально-полезный —
-присылай PR в upstream (`CONTRIBUTING.md`).
+Также создай файл-обёртку `hosts/_template/extras-media.nix`:
+
+```nix
+# hosts/_template/extras-media.nix
+{ ... }: {
+  imports = [ ../../extras/media.nix ];
+}
+```
+
+И добавь его в imports в `hosts/_template/default.nix`. Тогда новые машины
+будут иметь готовое подключение, юзеру останется только активировать
+через `settings.media.enable = true;`.
+
+Если получится универсально-полезный extras — присылай PR в upstream
+(`CONTRIBUTING.md`).

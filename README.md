@@ -120,21 +120,25 @@ gaming = {
 ```
 nixos-config/
 │
+│   🔒 UPSTREAM ZONE — не трогать, обновляется через `git pull upstream main`
 ├── flake.nix                  Точка входа, formatter, devShells
-├── lib/                       Переиспользуемые Nix-функции
-│
-├── modules/                   UPSTREAM ZONE (не трогать)
+├── lib/                       Nix-утилиты (mkHost, btrfs-subvolumes, catppuccin-colors)
+├── modules/                   NixOS modules (system + home-manager user)
 │   ├── system/                Системный уровень NixOS
 │   ├── user/                  Home Manager + dotfiles
 │   └── disko/                 Схемы разметки диска
+├── extras/                    Опциональные тематические комплекты (gaming, development)
+├── docs/                      Документация
 │
-├── hosts/                     Per-machine конфиги
-│   └── _template/             Шаблон для нового хоста
-│
-├── extras/                    Готовые «комплекты»
-├── secrets/                   Зашифрованные секреты (sops-nix)
-└── docs/                      Документация
+│   🟢 YOUR ZONE — твои правки, локально, в `.gitignore` (кроме _template)
+├── hosts/                     Всё про каждую машину (settings + код + dotfiles)
+│   ├── _template/             Полный шаблон новой машины (копируется как hosts/<имя>)
+│   └── <твоя-машина>/         Твоя машина (после `cp -r hosts/_template hosts/<имя>`)
+└── secrets/                   Зашифрованные sops-YAML (если используешь секреты)
 ```
+
+**Главный принцип:** одна папка — одна машина. Всё про машину живёт в
+`hosts/<имя>/`. Никаких блужданий между `custom/`, `hosts/`, обои в HOME, и т.д.
 
 Подробное описание каждого файла + ASCII data-flow — `docs/STRUCTURE.md`.
 
