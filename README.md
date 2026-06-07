@@ -75,7 +75,7 @@ passwd                                  # сменить дефолтный "nix
 | Logout-меню | wlogout |
 | Файловый менеджер | thunar (`Super+E`) |
 | Локскрин / Idle | hyprlock + hypridle |
-| Шейдеры | hyprshade (blue-light filter) |
+| Скриншоты | hyprshot (Print/Shift+Print/Ctrl+Print) |
 | Плагины | pyprland (scratchpads, smart_gaps) |
 | Браузер | firefox |
 

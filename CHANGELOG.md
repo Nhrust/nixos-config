@@ -2,6 +2,98 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.1] — 2026-06-07
+
+**Daily Essentials.** Минорный релиз с упором на удобство «из коробки» —
+добавлены повседневные media-утилиты (mpv/imv/zathura), упрощены скриншот-
+биндинги (hyprshot), добавлена история буфера обмена (cliphist + Super+V),
+исправлен баг с не-установленным playerctl (бинды XF86AudioPlay/Prev/Next
+наконец-то работают), pyprland теперь опционален. Удалены hyprshade и nmap.
+
+### Added
+
+- **`modules/user/tools/media.nix`** — новый модуль с пакетами:
+  - **mpv** + `programs.mpv.config` (hwdec, gpu-next, save-position-on-quit)
+  - **imv** — Wayland-friendly просмотрщик картинок
+  - **zathura** + `programs.zathura` (smooth-scroll, clipboard-selection) —
+    Catppuccin тема подцепляется автоматически через autoEnable
+  - **hyprshot** — обёртка над grim+slurp, упрощает скриншот-биндинги
+  - **cliphist** — история буфера обмена
+  - **hyprpicker** — color picker (eyedropper) для Hyprland
+  - **wf-recorder** — запись экрана в файл
+  - **playerctl** — для media-keys play/pause/next/prev (ранее биндинги
+    в `binds.conf` использовали playerctl, но пакет не был установлен —
+    биндинги молча не работали; теперь исправлено)
+  - **`xdg.mimeApps`** — ассоциации: PDF → zathura, картинки → imv,
+    видео/аудио → mpv. После `nrs` двойной клик в Thunar открывает в
+    правильной программе.
+- **Hyprland бинд `Super + V`** — выбор записи из истории буфера через
+  wofi-dmenu (запись авто-сохраняется при каждом copy благодаря cliphist
+  watcher в autostart).
+- **cliphist watchers в autostart.conf** — `wl-paste --watch cliphist store`
+  для текста и картинок (запускается через `command -v cliphist` чтобы
+  не падать если пакет вдруг недоступен).
+- **`settings.hyprland.pyprland` опция** (default true) — управляет
+  установкой pyprland пакета, копированием `pyprland.toml` и его автостартом.
+  Set `false` чтобы исключить pyprland полностью (биндинги Super+grave/
+  Super+Shift+N на scratchpads тогда не сработают).
+
+### Changed
+
+- **Скриншот-биндинги переписаны через hyprshot** (`binds.conf`):
+  - `Print` → `hyprshot -m region` (выделить область → буфер)
+  - `Shift+Print` → `hyprshot -m output` (весь монитор → буфер)
+  - `Ctrl+Print` → `hyprshot -m region -o ~/Pictures` (область → файл)
+  - Раньше был ручной `grim -g "$(slurp)" - | wl-copy` — работало, но
+    некрасиво. hyprshot делает то же чище + поддерживает уведомления.
+- **`autostart.conf`** — `pypr` теперь запускается через
+  `command -v pypr >/dev/null && pypr` (идемпотентно, не падает если
+  пакета нет).
+- **`modules/user/ui/hyprland.nix`** — `pyprland` пакет и `pyprland.toml`
+  обёрнуты в `lib.optionals pyprlandEnabled` / `lib.optionalAttrs pyprlandEnabled`.
+
+### Removed
+
+- **`hyprshade`** пакет + биндинг `Super + F11` (blue-light filter).
+  Большинство юзеров не используют blue-light в Hyprland (предпочитают
+  системную опцию через `redshift` или просто меньше работать ночью).
+  Если нужно — добавляется в `hosts/<host>/packages.nix` индивидуально.
+- **`nmap`** из `modules/user/tools/cli.nix`. Это инструмент для сетевых
+  админов, а не повседневный CLI. Кому нужен — добавляет в
+  `hosts/<host>/packages.nix`.
+
+### Fixed
+
+- **БАГ:** `binds.conf` имел биндинги `XF86AudioPlay/Prev/Next` через
+  `playerctl`, но пакет не был установлен — биндинги тихо не работали.
+  В v0.5.1 пакет добавлен в `media.nix`, биндинги наконец-то работают.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git pull upstream main
+nrs
+```
+
+После применения:
+- Двойной клик на PDF в Thunar → откроется zathura
+- Двойной клик на картинку → imv
+- Двойной клик на mp4/mkv → mpv
+- `Super+V` → история буфера в wofi
+- `Print` / `Shift+Print` / `Ctrl+Print` → скриншоты через hyprshot
+- F-кнопки play/pause/next/prev на ноутбуке управляют Spotify/mpv
+
+Если **не нужны scratchpads** — выключи pyprland в settings:
+
+```nix
+# hosts/<host>/settings.nix
+hyprland = {
+  pyprland = false;   # пакет не ставится, биндинги Super+grave / Super+Shift+N не работают
+};
+```
+
+
 ## [0.5.0] — 2026-06-07
 
 **Финальный архитектурный рефакторинг.** Папка `custom/` упразднена —

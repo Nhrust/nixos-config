@@ -14,7 +14,7 @@
 # settings.kbLayouts (новое в v0.2.0).
 #
 # Скрипты в scripts/ копируются как исполняемые.
-# Плагины: pyprland (scratchpads + smart_gaps), hyprshade (blue-light).
+# Плагины: pyprland (scratchpads + smart_gaps, опционально через settings.hyprland.pyprland).
 # =============================================================================
 { lib, pkgs, settings, inputs, hostName, ... }:
 let
@@ -25,6 +25,10 @@ let
   # а демон не запускается из conf/profile/server.conf.
   needsHypridle = profile != "server";
   hypridleSrc   = ../dotfiles/hyprland/idle + "/${profile}.conf";
+
+  # pyprland — опциональный (default true). scratchpad биндинги Super+grave
+  # и Super+Shift+N работают только при включённом pyprland.
+  pyprlandEnabled = (settings.hyprland.pyprland or null) != false;
 
   # Обои выбираются по теме
   wallpaperSrc = ../dotfiles/hyprland/wallpapers + "/default-${settings.theme}.png";
@@ -61,10 +65,13 @@ let
 in
 {
   # ── Плагины Hyprland-стека ────────────────────────────────────────────────
-  home.packages = with pkgs; [
-    pyprland     # Python-плагины (scratchpads, smart_gaps), запускается через `pypr`
-    hyprshade    # шейдеры — blue-light filter, vibrance и т.д.
-  ];
+  home.packages = with pkgs;
+    # pyprland (scratchpads + smart_gaps) — опционально через settings.
+    # Default = true для back-compat. Если выключишь — биндинги Super+grave
+    # (scratchpad term) и Super+Shift+N (scratchpad notes) перестанут работать.
+    lib.optionals pyprlandEnabled [
+      pyprland     # Python-плагины, запускается через `pypr`
+    ];
 
   # ── Конфиги Hyprland (read-only, обновляются upstream) ────────────────────
   xdg.configFile = {
@@ -89,8 +96,6 @@ in
     "hypr/hyprpaper.conf".source = ../dotfiles/hyprland/hyprpaper.conf;
     "hypr/hyprlock.conf".source  = hyprlockConf;
 
-    # Pyprland: scratchpads + smart_gaps
-    "hypr/pyprland.toml".source  = ../dotfiles/hyprland/pyprland.toml;
 
     # Скрипты-обёртки (executable)
     "hypr/scripts/volume.sh" = {
@@ -105,7 +110,10 @@ in
       source     = ../dotfiles/hyprland/scripts/powerprofile.sh;
       executable = true;
     };
-  } // (lib.optionalAttrs needsHypridle {
+  } // (lib.optionalAttrs pyprlandEnabled {
+    # pyprland.toml — копируется только если pyprland включён
+    "hypr/pyprland.toml".source = ../dotfiles/hyprland/pyprland.toml;
+  }) // (lib.optionalAttrs needsHypridle {
     # hypridle конфиг только для laptop/desktop
     "hypr/hypridle.conf".source = hypridleSrc;
   }) // (lib.optionalAttrs hasCustomUserConf {

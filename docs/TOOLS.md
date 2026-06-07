@@ -54,6 +54,19 @@
 | **protonup-qt** | `extras/gaming.nix` (`gaming.protonup = true;`) | `protonup-qt` (GUI) |
 | **lutris** | `extras/gaming.nix` (`gaming.lutris = true;`) | `lutris` |
 
+### Просмотр медиа и буфер обмена (v0.5.1+)
+
+| Утилита | Категория | Команда / триггер |
+|---|---|---|
+| **mpv** | видеоплеер | `mpv <file>` или клик в Thunar |
+| **imv** | картинки | `imv <file>` или клик в Thunar |
+| **zathura** | PDF | `zathura <file>.pdf` или клик в Thunar |
+| **hyprshot** | скриншоты | `Print` (область) / `Shift+Print` (экран) / `Ctrl+Print` (в файл) |
+| **cliphist** | история буфера | `Super+V` (wofi-выбор) |
+| **hyprpicker** | color picker | `hyprpicker -a` (в буфер) или `hyprpicker --autocopy` |
+| **wf-recorder** | запись экрана | `wf-recorder -g "$(slurp)" -f out.mp4` |
+| **playerctl** | управление плеером | `playerctl play-pause` (нужно для XF86AudioPlay) |
+
 ---
 
 ## 🎯 Cheatsheet — «хочу X → команда Y»

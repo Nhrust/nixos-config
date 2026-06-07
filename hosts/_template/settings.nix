@@ -92,6 +92,15 @@
   # 60    — если ноут всё время в розетке
   batteryChargeLimit = null;
 
+  # ── Hyprland tuning ───────────────────────────────────────────────────────
+  hyprland = {
+    # pyprland — Python-плагины Hyprland (scratchpads + smart_gaps).
+    # true  → ставится пакет + автостарт + биндинги Super+grave (терминал
+    #         scratchpad), Super+Shift+N (заметки scratchpad)
+    # false → ничего из этого, биндинги тихо не сработают
+    pyprland = true;
+  };
+
   # ── Тема ──────────────────────────────────────────────────────────────────
   # theme:       "dark" → Catppuccin Mocha | "light" → Catppuccin Latte
   # themeAccent: blue | mauve | lavender | teal | pink | sky | sapphire

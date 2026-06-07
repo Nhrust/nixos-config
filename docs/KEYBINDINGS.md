@@ -65,11 +65,19 @@
 | `Super + F3` | Power Saver (минимум потребления) |
 | ЛКМ по иконке профиля в waybar | Циклить performance → balanced → power-saver |
 
-## Blue-light filter
+## Буфер обмена (cliphist)
 
 | Бинд | Действие |
 |---|---|
-| `Super + F11` | Toggle blue-light filter (через `hyprshade`) |
+| `Super + V` | Открыть историю буфера (wofi-выбор), вернуть в буфер |
+
+## Скриншоты (hyprshot)
+
+| Бинд | Действие |
+|---|---|
+| `Print` | Выделить область → буфер обмена |
+| `Shift + Print` | Весь монитор → буфер |
+| `Ctrl + Print` | Область → файл `~/Pictures/<timestamp>.png` |
 
 ## Громкость, яркость, медиа
 
