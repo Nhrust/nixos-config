@@ -20,7 +20,7 @@
       intel-compute-runtime    # OpenCL
       intel-vaapi-driver       # VA-API fallback для старых поколений
       # Для 12+ поколения (Alder Lake+) может потребоваться vpl-gpu-rt
-      # вместо intel-media-driver. Включи в custom/<host>.nix если нужно.
+      # вместо intel-media-driver. Включи в hosts/<host>/overrides.nix через lib.mkForce.
     ];
   };
 }

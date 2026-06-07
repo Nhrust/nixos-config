@@ -52,11 +52,11 @@ let
   };
 
   # ── Опциональный декларативный user.conf (v0.3.0+) ─────────────────────
-  # Если в custom/<hostName>/dotfiles/hypr-user.conf лежит файл — управляем
+  # Если в hosts/<hostName>/dotfiles/hypr-user.conf лежит файл — управляем
   # ~/.config/hypr/user.conf декларативно через home-manager (read-only симлинк
   # из /nix/store). Иначе — fallback на mutable активацию (создаётся один раз
   # из template, дальше юзер правит руками в $HOME).
-  customUserConf    = inputs.self + "/custom/${hostName}/dotfiles/hypr-user.conf";
+  customUserConf    = inputs.self + "/hosts/${hostName}/dotfiles/hypr-user.conf";
   hasCustomUserConf = builtins.pathExists customUserConf;
 in
 {
@@ -109,13 +109,13 @@ in
     # hypridle конфиг только для laptop/desktop
     "hypr/hypridle.conf".source = hypridleSrc;
   }) // (lib.optionalAttrs hasCustomUserConf {
-    # v0.3.0+: декларативный user.conf из custom/<host>/dotfiles/
+    # v0.3.0+: декларативный user.conf из hosts/<host>/dotfiles/
     # Read-only симлинк из /nix/store — переносится между машинами вместе с репо.
     "hypr/user.conf".source = customUserConf;
   });
 
   # ── user.conf mutable fallback ────────────────────────────────────────────
-  # Активируется ТОЛЬКО когда нет custom/<host>/dotfiles/hypr-user.conf.
+  # Активируется ТОЛЬКО когда нет hosts/<host>/dotfiles/hypr-user.conf.
   # Создаётся один раз из template, дальше юзер правит руками в $HOME.
   home.activation.hyprlandUserConf = lib.mkIf (!hasCustomUserConf)
     (lib.hm.dag.entryAfter [ "writeBoundary" ] ''

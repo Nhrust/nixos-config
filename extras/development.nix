@@ -2,7 +2,7 @@
 # extras/development.nix — Стек разработки (опционально, v0.3.0+ параметризация)
 # =============================================================================
 # Подключение:
-#   imports = [ ../extras/development.nix ];  # в custom/<host>.nix
+#   imports = [ ../../extras/development.nix ];  # в hosts/<host>/extras-development.nix
 #
 # Активация:
 #   1. settings.development.enable = true в hosts/<host>/settings.nix

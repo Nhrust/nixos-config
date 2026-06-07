@@ -5,15 +5,32 @@
 ## TL;DR — где что
 
 ```
-modules/      ← НЕ ТРОГАТЬ. Это upstream. Правки сюда = конфликт при git pull.
-hosts/<host>/ ← Параметры этой машины (settings.nix + hardware.nix)
-custom/<host> ← ВСЕ твои правки сюда (файл или папка)
-extras/       ← Готовые «комплекты», подключай в custom/
-$HOME/...     ← Mutable: ~/.config/hypr/user.conf, fish/conf.d/local.fish
+modules/         ← НЕ ТРОГАТЬ. Это upstream. Правки сюда = конфликт при git pull.
+hosts/<host>/    ← ВСЁ про эту машину: settings, hardware, твой код, dotfiles.
+extras/          ← Готовые «комплекты», подключай в hosts/<host>/.
+$HOME/...        ← Mutable fallback: ~/.config/hypr/user.conf, fish/conf.d/local.fish
 ```
 
-`custom/<host>.nix` и `hosts/<host>/settings.nix` исключены из git
-через `.gitignore` — личное никуда не уезжает.
+Папка `hosts/<host>/` целиком исключена из git через `.gitignore`
+(кроме шаблона `hosts/_template/`) — личное никуда не уезжает.
+
+## ⚡ Самый быстрый путь
+
+Скопируй шаблон новой машины и пройди по файлам, раскомментируя нужное:
+
+```fish
+cp -r hosts/_template hosts/$(hostname)
+$EDITOR hosts/$(hostname)/settings.nix   # параметры машины
+$EDITOR hosts/$(hostname)/default.nix    # подключения модулей кастомизации
+$EDITOR hosts/$(hostname)/packages.nix   # пакеты
+$EDITOR hosts/$(hostname)/services.nix   # сервисы
+$EDITOR hosts/$(hostname)/aliases.nix    # fish-алиасы
+nrs
+```
+
+Все .nix файлы кастомизации лежат рядом в `hosts/<host>/` и редактируются
+индивидуально. Этот документ ниже — глубокая теория (модель кастомизации,
+правила наложения, mkForce, конфликты).
 
 ## Матрица «хочу X → иди в Y»
 
@@ -21,167 +38,89 @@ $HOME/...     ← Mutable: ~/.config/hypr/user.conf, fish/conf.d/local.fish
 |---|---|---|
 | Сменить hostname / username / timezone | `hosts/<host>/settings.nix` | `hostname = "my-pc";` |
 | Сменить тему / акцент | `hosts/<host>/settings.nix` | `theme = "light"; themeAccent = "blue";` |
-| Сменить раскладку клавиатуры | `hosts/<host>/settings.nix` (v0.2.0+) | `kbLayouts = "us,de";` |
-| Включить Bluetooth / принтер / виртуализацию | `hosts/<host>/settings.nix` | `bluetooth = true;` |
+| Сменить раскладку клавиатуры | `hosts/<host>/settings.nix` | `kbLayouts = "us,de";` |
+| Включить Bluetooth / принтер | `hosts/<host>/settings.nix` | `bluetooth = true;` |
 | Лимит заряда батареи | `hosts/<host>/settings.nix` | `batteryChargeLimit = 80;` |
-| **Включить готовый гейминг стек** | `custom/<host>.nix` | `imports = [ ../extras/gaming.nix ];` |
-| **Включить готовый дев-стек** | `custom/<host>.nix` | `imports = [ ../extras/development.nix ];` |
-| Установить системный пакет (Discord, OBS) | `custom/<host>.nix` | `environment.systemPackages = [ pkgs.discord ];` |
-| Установить пакет только в своё $HOME | `custom/<host>.nix` | `home-manager.users.${settings.username}.home.packages = [ pkgs.spotify ];` |
-| Добавить fish-алиас (декларативно) | `custom/<host>.nix` | `home-manager.users.<u>.programs.fish.shellAliases.myproj = "cd ~/work";` |
-| Добавить fish-алиас (mutable, для проб) | `~/.config/fish/conf.d/local.fish` | `alias myproj 'cd ~/work'` |
-| Сменить Hyprland бинд | `~/.config/hypr/user.conf` (live, без `nrs`!) | `bind = SUPER, B, exec, firefox` |
-| Запустить программу при логине | `~/.config/hypr/user.conf` | `exec-once = telegram-desktop` |
-| Сменить монитор / разрешение | `~/.config/hypr/user.conf` | `monitor = DP-1, 2560x1440@144, 0x0, 1` |
+| Включить гейминг стек | `hosts/<host>/default.nix` + `settings.nix` | раскомментируй `./extras-gaming.nix` + `gaming.enable = true;` |
+| Включить дев-стек | то же | `./extras-development.nix` + `development.enable = true;` |
+| Установить системный пакет | `hosts/<host>/packages.nix` | в блок `environment.systemPackages` |
+| Пакет только в свой $HOME | `hosts/<host>/packages.nix` | в `home-manager.users.X.home.packages` |
+| Fish-алиас (декларативно) | `hosts/<host>/aliases.nix` | `programs.fish.shellAliases.myproj = "cd ~/work";` |
+| Fish-алиас (mutable, для проб) | `~/.config/fish/conf.d/local.fish` | `alias myproj 'cd ~/work'` |
+| Hyprland бинд (декларативно) | `hosts/<host>/dotfiles/hypr-user.conf` | `bind = SUPER, B, exec, firefox` |
+| Hyprland бинд (live, без `nrs`) | `~/.config/hypr/user.conf` | то же |
+| Сменить монитор | то же | `monitor = DP-1, 2560x1440@144, 0x0, 1` |
 | Поменять обои | замени файл | `~/Pictures/wallpaper.png` |
-| Включить системный сервис | `custom/<host>.nix` | `services.tailscale.enable = true;` |
-| Перетереть значение из `modules/` | `custom/<host>.nix` | `services.X.enable = lib.mkForce false;` |
-| Свой полноценный NixOS-модуль | `custom/<host>/<моё>.nix` (папка) | см. ниже |
-| Сменить kb_layout с сохранением | `hosts/<host>/settings.nix` (v0.2.0+) | `kbLayouts = "us,ru,de";` |
+| Системный сервис | `hosts/<host>/services.nix` | раскомментируй tailscale/syncthing |
+| Override `modules/` | `hosts/<host>/overrides.nix` | `services.X.enable = lib.mkForce false;` |
+| Использовать sops секрет | `hosts/<host>/secrets-usage.nix` | см. файл |
+| Override любого upstream-dotfile | `hosts/<host>/dotfiles/<имя>` | см. `hosts/_template/dotfiles/README.md` |
 
-## Три модели для `custom/`
-
-### Модель 1: один файл — `custom/<host>.nix`
-
-Самая простая, для маленьких машин:
-
-```nix
-{ pkgs, lib, settings, ... }: {
-  imports = [ ../extras/gaming.nix ];
-  environment.systemPackages = with pkgs; [ discord telegram-desktop ];
-  services.tailscale.enable = true;
-}
-```
-
-### Модель 2: папка — `custom/<host>/`
-
-Для машин где много правок, разносим по теме:
+## Структура `hosts/<host>/`
 
 ```
-custom/my-laptop/
-├── default.nix       ← точка входа
-├── packages.nix      ← дополнительные пакеты
-├── services.nix      ← системные сервисы
-└── overrides.nix     ← mkForce'ы и тонкая настройка
+hosts/my-laptop/
+├── settings.nix              ← параметры (hostname, cpu, gpu, theme, ...)
+├── hardware.nix              ← generated by nixos-generate-config
+├── default.nix               ← entry-point с imports
+├── packages.nix              ← пакеты
+├── services.nix              ← системные сервисы
+├── aliases.nix               ← декларативные fish-алиасы
+├── extras-gaming.nix         ← подключение extras/gaming.nix
+├── extras-development.nix    ← подключение extras/development.nix
+├── overrides.nix             ← lib.mkForce примеры
+├── secrets-usage.nix         ← использование sops секретов
+└── dotfiles/                 ← опциональные декларативные dotfiles
+    ├── README.md             ← список поддерживаемых файлов
+    ├── hypr-user.conf
+    ├── fish-local.fish
+    ├── waybar-style.css
+    └── ... (любой из fileMap в dotfile-overrides.nix)
 ```
 
-`default.nix`:
+`mkHost.nix` подключает `hosts/<host>/default.nix`, который импортирует
+остальные .nix модули рядом. `dotfiles/` обрабатывается отдельным
+generic-сканером `modules/user/dotfile-overrides.nix` — любой файл из
+поддерживаемого списка автоматически становится override'ом через
+`xdg.configFile + lib.mkForce`.
 
-```nix
-{ ... }: {
-  imports = [
-    ./packages.nix
-    ./services.nix
-    ./overrides.nix
-    ../../extras/gaming.nix
-    ../../extras/development.nix
-  ];
-}
-```
+## Три уровня — параметры / код / dotfiles
 
-`mkHost.nix` сам понимает в каком формате `custom/<host>` — файл или папка
-(back-compat).
+| Уровень | Где | Что делает |
+|---|---|---|
+| **1. Параметры** | `settings.nix` | Заполняешь поля — модули из `modules/` читают их и применяют |
+| **2. Код-кастомизация** | `default.nix` + `packages.nix`/`services.nix`/... | Свои NixOS-модули, мерджатся с upstream через NixOS module system |
+| **3. Dotfile overrides** | `dotfiles/<имя>` | Файлы симлинкуются в `~/.config/...` через `lib.mkForce`, перекрывая upstream-версии |
 
-### Модель 3: своя полноценная NixOS-фича
+Три уровня работают независимо.
 
-Например — добавить i3 поверх Hyprland для совместимости:
+## Правила наложения
 
-```
-custom/my-laptop/
-├── default.nix
-└── extras/
-    └── i3-extra.nix      ← свой полноценный модуль
-```
+### NixOS module system (settings.nix, default.nix, ...)
 
-`extras/i3-extra.nix` пишется как обычный NixOS-модуль:
-
-```nix
-{ config, lib, pkgs, ... }: {
-  services.xserver.enable = true;
-  services.xserver.windowManager.i3.enable = true;
-}
-```
-
-Импортируется в `custom/my-laptop/default.nix`:
-
-```nix
-{ ... }: {
-  imports = [ ./extras/i3-extra.nix ];
-}
-```
-
-## Использование готовых `extras/`
-
-Текущий каталог:
-
-| Модуль | Что |
+| Тип опции | При дубликате |
 |---|---|
-| `extras/gaming.nix` | Steam, GameMode, Gamescope, MangoHud, ProtonUP, Lutris, steam-run |
-| `extras/development.nix` | Podman + docker alias, podman-compose, lazydocker, dive |
+| Списки (packages, extraGroups) | Мерджатся (concat) |
+| Attribute sets (shellAliases) | Падение билда — нужен `lib.mkForce` |
+| Скаляры (enable, hostname) | Падение билда — нужен `lib.mkForce` |
 
-Подключи через `imports`:
+### Hyprland (user.conf или dotfiles/hypr-*.conf)
 
-```nix
-{ ... }: {
-  imports = [
-    ../extras/gaming.nix
-    ../extras/development.nix
-  ];
-}
-```
+`hyprland.conf` подключает в порядке: дефолты → `user.conf` последним.
+**Последняя директива выигрывает** без падений. Твои бинды в `user.conf`
+override'ят дефолтные.
 
-Хочешь свой `extras/` — пиши в `custom/<host>/extras/<имя>.nix` (см. Модель 3),
-или если он переиспользуем многими — присылай PR (см. `CONTRIBUTING.md`).
+### Fish (aliases.nix или dotfiles/fish-local.fish)
 
-## Override модуля из `modules/`
+Декларативный через `programs.fish.shellAliases` — мерджится с дефолтами,
+конфликт = падение nrs. Mutable `local.fish` — fish сам источит файл при
+старте, последний alias выигрывает.
 
-`modules/` нельзя править — но можно **переопределить** опции через `lib.mkForce`:
+## Анти-паттерны
 
-```nix
-{ lib, ... }: {
-  # Дефолт repo включает hypridle — выключим у себя:
-  services.hypridle.enable = lib.mkForce false;
-
-  # Дефолт extras/gaming.nix включает gamescope — нам не нужно:
-  programs.gamescope.enable = lib.mkForce false;
-}
-```
-
-## Mutable layer: live-правки
-
-Эти два файла создаются один раз при первой установке и **никогда не задеваются**
-обновлениями. Идеальны для проб без полной пересборки.
-
-### `~/.config/hypr/user.conf`
-
-Подключается последним в `hyprland.conf`. Любая директива здесь переопределяет
-дефолт. Применяется **на лету** через `hyprctl reload`, не нужен `nrs`.
-
-```bash
-# Пример
-echo 'bind = SUPER, B, exec, firefox' >> ~/.config/hypr/user.conf
-hyprctl reload
-```
-
-Шаблон с примерами — `modules/user/dotfiles/hyprland/user.conf.template`.
-
-### `~/.config/fish/conf.d/local.fish`
-
-Подключается fish'ем при старте оболочки. Здесь — твои алиасы, функции,
-переменные окружения. Подхватывается при `exec fish` или открытии нового
-терминала, не нужен `nrs`.
-
-```fish
-# Пример
-alias myproj 'cd ~/work/my-project'
-set -x GITHUB_TOKEN "ghp_..."   # будет в env только для тебя
-```
-
-## Когда что выбрать
-
-| Сценарий | Использовать |
-|---|---|
-| Пробую быструю идею (бинд, алиас) | `user.conf` / `local.fish` (live) |
-| Уверен в правке, хочу версионировать на этой машине | `custom/<host>.nix` |
-| Правка нужна на всех моих машинах | пиши в свой fork `modules/` или собственный extras/ |
-| Правка кажется полезной для всех | присылай PR в upstream — `CONTRIBUTING.md` |
+- **НЕ правь `modules/`** — конфликт при `git pull upstream main`. Используй
+  `hosts/<host>/overrides.nix` через `lib.mkForce`.
+- **НЕ кидай реальные секреты в декларативный `dotfiles/fish-local.fish`** —
+  файл уходит в твой git fork. Используй sops (`secrets/default.yaml`).
+- **НЕ дублируй `imports = [ ../../extras/gaming.nix ]`** в нескольких
+  местах — подключай один раз через `extras-gaming.nix`.

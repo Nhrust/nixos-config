@@ -1,5 +1,5 @@
 # =============================================================================
-# custom/_examples/extras-development.nix — Подключение dev стека
+# hosts/_template/extras-development.nix (копируется как hosts/<host>/extras-development.nix) — Подключение dev стека
 # =============================================================================
 # Импортирует extras/development.nix. Активация и подопции — в
 # hosts/<host>/settings.nix:

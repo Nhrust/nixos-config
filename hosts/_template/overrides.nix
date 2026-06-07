@@ -1,5 +1,5 @@
 # =============================================================================
-# custom/_examples/overrides.nix — Override опций из modules/ через lib.mkForce
+# hosts/_template/overrides.nix (копируется как hosts/<host>/overrides.nix) — Override опций из modules/ через lib.mkForce
 # =============================================================================
 # modules/ — upstream immutable. Чтобы изменить настройку которая там задана,
 # используй lib.mkForce — это говорит NixOS module system «возьми моё значение,

@@ -116,15 +116,24 @@ nixos-config/
 │           ├── wofi/{config, style.css}
 │           └── fish/local.fish.template
 │
-├── hosts/                           — per-machine конфиги
-│   └── _template/                   — UPSTREAM (шаблон)
-│       ├── settings.nix             — копировать в hosts/<твоё-имя>/settings.nix
-│       └── hardware.nix             — генерится nixos-generate-config
-│
-├── custom/                          — USER ZONE. Друг трогает только это.
-│   ├── _example.nix                 — пример как писать custom/<host>.nix
-│   ├── README.md
-│   └── <host>.nix или <host>/       — кастомизации конкретной машины (gitignored)
+├── hosts/                           — USER ZONE: всё про каждую машину
+│   ├── _template/                   — полный шаблон новой машины (v0.5.0+)
+│   │   ├── README.md                — навигатор по файлам шаблона
+│   │   ├── settings.nix             — параметры (hostname, cpu, theme, ...)
+│   │   ├── hardware.nix             — заглушка (генерится через nixos-generate-config)
+│   │   ├── default.nix              — entry-point с imports
+│   │   ├── packages.nix             — системные + home-manager пакеты
+│   │   ├── services.nix             — tailscale/syncthing/SSH/borg/...
+│   │   ├── aliases.nix              — декларативные fish-алиасы
+│   │   ├── extras-gaming.nix        — подключение extras/gaming.nix
+│   │   ├── extras-development.nix   — подключение extras/development.nix
+│   │   ├── overrides.nix            — lib.mkForce примеры
+│   │   ├── secrets-usage.nix        — использование sops секретов
+│   │   └── dotfiles/                — опц. декларативные dotfile overrides
+│   │       ├── README.md            — список поддерживаемых файлов
+│   │       ├── hypr-user.conf       — Hyprland override
+│   │       └── fish-local.fish      — fish override
+│   └── <твоя-машина>/               — копия _template/, отредактирована (gitignored)
 │
 ├── extras/                          — опциональные тематические модули (v0.2.0)
 │   ├── README.md
@@ -173,8 +182,8 @@ nixos-config/
                     │  modules/system/ui/*.nix            │
                     │                                     │
                     │ Custom layer:                       │
-                    │  custom/<host>.nix или              │
-                    │  custom/<host>/default.nix          │
+                    │  hosts/<host>/default.nix           │
+                    │  + остальные *.nix рядом            │
                     │                                     │
                     │ Home-manager:                       │
                     │  modules/user/home.nix              │
@@ -190,13 +199,13 @@ nixos-config/
 
 1. **`modules/` иммутабельно для пользователя.** Любая правка там = конфликт
    при `git pull upstream main`. Если нужно поменять поведение модуля —
-   override в `custom/<host>.nix` через `lib.mkForce` или подключение
+   override в `hosts/<host>/overrides.nix` через `lib.mkForce` или подключение
    собственного модуля.
 
 2. **`settings.nix` — единственный конфиг машины первой необходимости.**
    Все per-host параметры сюда. Шаблон в `hosts/_template/settings.nix`.
 
-3. **`custom/<host>.nix` — для всего что не вписалось в `settings.nix`.**
+3. **`hosts/<host>/default.nix` + остальные `.nix` файлы — для всего что не вписалось в `settings.nix`.**
    Дополнительные пакеты, сервисы, override модулей, подключение `extras/`.
 
 4. **Автодискавер — для модулей без conditional choice.** Если у модуля

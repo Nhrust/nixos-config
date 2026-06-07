@@ -2,6 +2,103 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] — 2026-06-07
+
+**Финальный архитектурный рефакторинг.** Папка `custom/` упразднена —
+всё что относится к одной машине теперь живёт в `hosts/<host>/`. Generic
+dotfile override механизм поддерживает любые upstream-конфиги, не только
+hypr-user.conf/fish-local.fish. Единая ментальная модель: «hosts/ = всё про
+машины, modules/ = upstream, extras/ = опц. комплекты, secrets/ = sops».
+
+### Breaking changes
+
+- **Папка `custom/` удалена.** Поскольку `custom-examples-patch` был свежим
+  и никто не успел положить туда реальный код своей машины, миграция не
+  требуется. Если у тебя был `custom/<host>.nix` или `custom/<host>/`:
+  - `custom/<host>.nix` → `hosts/<host>/default.nix`
+  - `custom/<host>/*` → `hosts/<host>/*`
+  - `custom/<host>/dotfiles/*` → `hosts/<host>/dotfiles/*`
+
+### Added
+
+- **`hosts/_template/`** теперь полный шаблон новой машины. Содержит:
+  `settings.nix`, `hardware.nix`, `default.nix`, `packages.nix`,
+  `services.nix`, `aliases.nix`, `extras-gaming.nix`, `extras-development.nix`,
+  `overrides.nix`, `secrets-usage.nix`, `README.md`, и `dotfiles/`
+  с `hypr-user.conf` + `fish-local.fish` + `README.md`. Юзер копирует
+  всю папку под именем своей машины: `cp -r hosts/_template hosts/$(hostname)`.
+- **`modules/user/dotfile-overrides.nix`** — generic-сканер. Любой файл из
+  поддерживаемого списка (см. `fileMap` внутри модуля), положенный в
+  `hosts/<host>/dotfiles/`, автоматически становится override'ом
+  соответствующего `~/.config/...` файла через `xdg.configFile + lib.mkForce`.
+  Поддерживается: `waybar-config.jsonc`, `waybar-style.css`, `wofi-config`,
+  `wofi-style.css`, `kitty.conf`, `mako.config`, `hypr-monitors.conf`,
+  `hypr-binds.conf`, `hypr-decoration.conf`, `hypr-animations.conf`,
+  `hypr-windowrules.conf`. Юзер кидает файл — без правки .nix модулей.
+- **`hosts/_template/dotfiles/README.md`** — таблица всех поддерживаемых
+  файлов с объяснением что куда симлинкуется + анти-паттерны.
+
+### Changed
+
+- **`lib/mkHost.nix`** — упрощён. Удалена логика `customFile`/`customDir`
+  для `custom/<host>.nix`. Теперь ищет только `hosts/<host>/default.nix`
+  (если есть, импортируется как кастом-модуль; нет — не импортируется).
+- **`modules/user/ui/hyprland.nix`** — путь к декларативному `hypr-user.conf`
+  изменён с `custom/${hostName}/dotfiles/` на `hosts/${hostName}/dotfiles/`.
+  Логика mutable fallback на `~/.config/hypr/user.conf` не изменена.
+- **`modules/user/shell/fish.nix`** — аналогично для `fish-local.fish`.
+- **`.gitignore`** — две строки `hosts/* + !hosts/_template/` вместо ранее
+  отдельных правил для `hosts/*/settings.nix`, `hosts/*/hardware.nix` и всего
+  блока `custom/*`. Логика теперь: «всё в hosts/ — личное, кроме _template/».
+- **`docs/CUSTOMIZATION.md`** — полностью переписан под новую модель: одна
+  папка на машину, три уровня (параметры/код/dotfiles), правила наложения,
+  анти-паттерны.
+- **`docs/STRUCTURE.md`** — дерево репо: `custom/` отсутствует, `hosts/`
+  раскрыт со всеми файлами шаблона.
+- **`README.md`, `docs/INSTALL.md`, `docs/UPDATING.md`, `docs/SECRETS.md`,
+  `docs/TOOLS.md`** — все упоминания `custom/` заменены на `hosts/<host>/`.
+
+### Removed
+
+- **`custom/`** — папка целиком удалена со всем содержимым:
+  `_example.nix`, `_examples/` со всеми 10 файлами и `dotfiles/`,
+  `README.md`, `.gitkeep`. Их функционал перенесён в `hosts/_template/`.
+
+### Что делать другу при обновлении
+
+```fish
+cd ~/nixos-config
+git pull upstream main
+
+# Если у тебя БЫЛ custom/<host>.nix или custom/<host>/ (с реальными правками):
+# (а скорее всего нет — custom-examples-patch был свежим)
+mv custom/$(hostname).nix hosts/$(hostname)/default.nix   # если был файл
+# ИЛИ
+mv custom/$(hostname)/* hosts/$(hostname)/                # если была папка
+
+# Если у тебя НЕ было custom/<host>/ с правками (только шаблоны upstream) —
+# просто переезжай на новую структуру:
+cp -r hosts/_template hosts/$(hostname)
+# затем заполни settings.nix и hardware.nix как обычно
+
+nrs
+git add -A
+git commit -m "migrate: custom/ → hosts/<host>/ for v0.5.0"
+git push origin main
+```
+
+### Дальнейшие планы
+
+Серия 0.x **окончательно закрыта** с v0.5.0. Архитектура стабильна:
+
+- `modules/` — upstream, immutable
+- `hosts/<host>/` — всё про каждую машину (settings + код + dotfiles)
+- `extras/` — опциональные тематические пакеты
+- `secrets/` — sops-зашифрованные YAMLs
+
+Дальнейшие релизы — точечные улучшения (новые extras, фиксы, мелкие фичи).
+
+
 ## [0.4.0] — 2026-06-06
 
 Theme-aware CSS/конфиги — устранены последние хардкоды Catppuccin Mocha

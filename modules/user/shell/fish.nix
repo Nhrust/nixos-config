@@ -4,10 +4,10 @@
 { lib, settings, inputs, hostName, ... }:
 let
   # ── Опциональный декларативный local.fish (v0.3.0+) ─────────────────────
-  # Если в custom/<hostName>/dotfiles/fish-local.fish лежит файл — управляем
+  # Если в hosts/<hostName>/dotfiles/fish-local.fish лежит файл — управляем
   # ~/.config/fish/conf.d/local.fish декларативно через home-manager.
   # Иначе fallback на mutable активацию из template.
-  customLocalFish    = inputs.self + "/custom/${hostName}/dotfiles/fish-local.fish";
+  customLocalFish    = inputs.self + "/hosts/${hostName}/dotfiles/fish-local.fish";
   hasCustomLocalFish = builtins.pathExists customLocalFish;
 in
 {
@@ -33,7 +33,7 @@ in
 
       # ── NixOS — через path: чтобы избегать ловушки git-rev ──────────────
       # path: говорит Nix читать файлы с диска, а не из последнего коммита.
-      # Поэтому правки в hosts/<host>/settings.nix или custom/ применяются
+      # Поэтому правки в hosts/<host>/ или его файлы применяются
       # сразу через `nrs`, без обязательного git commit.
       nrs = "sudo nixos-rebuild switch --flake ~/nixos-config/#$(hostname)";
       nrd = "sudo nixos-rebuild dry-build --flake ~/nixos-config/#$(hostname)";
@@ -56,14 +56,14 @@ in
     };
   };
 
-  # ── v0.3.0+: декларативный local.fish из custom/<host>/dotfiles/ ──────────
+  # ── v0.3.0+: декларативный local.fish из hosts/<host>/dotfiles/ ──────────
   # Когда файла нет — опция остаётся unset, mutable активация ниже сработает.
   xdg.configFile."fish/conf.d/local.fish" = lib.mkIf hasCustomLocalFish {
     source = customLocalFish;
   };
 
   # ── local.fish mutable fallback ───────────────────────────────────────────
-  # Активируется ТОЛЬКО когда нет custom/<host>/dotfiles/fish-local.fish.
+  # Активируется ТОЛЬКО когда нет hosts/<host>/dotfiles/fish-local.fish.
   # Создаётся один раз из template, дальше юзер правит руками в $HOME.
   home.activation.fishLocalConf = lib.mkIf (!hasCustomLocalFish)
     (lib.hm.dag.entryAfter [ "writeBoundary" ] ''

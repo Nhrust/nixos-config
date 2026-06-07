@@ -215,7 +215,7 @@ systemd-boot не сможет установиться.
 
 ```bash
 ls -la ~/nixos-config/
-# flake.nix  modules/  hosts/  lib/  custom/  extras/  .git/  и т.д.
+# flake.nix  modules/  hosts/  lib/  extras/  secrets/  .git/  и т.д.
 ```
 
 Эту папку создал `bootstrap.nix` — активационный скрипт который:
@@ -223,7 +223,7 @@ ls -la ~/nixos-config/
 2. Сделал тебя владельцем (`chown -R`)
 3. Инициализировал git репо, добавил `upstream` remote
 4. Создал первый коммит — но **без** твоих локальных файлов
-   (`hosts/<host>/settings.nix`, `hardware.nix`, `custom/*` — в `.gitignore`)
+   (вся папка `hosts/<host>/` — в `.gitignore`, кроме `_template/`)
 
 Это значит:
 - Все твои правки на месте, рабочие, читаются Nix'ом

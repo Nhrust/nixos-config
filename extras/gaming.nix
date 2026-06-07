@@ -2,7 +2,7 @@
 # extras/gaming.nix — Гейминг стек (опционально, v0.3.0+ параметризация)
 # =============================================================================
 # Подключение:
-#   imports = [ ../extras/gaming.nix ];  # в custom/<host>.nix
+#   imports = [ ../../extras/gaming.nix ];  # в hosts/<host>/extras-gaming.nix
 #
 # Активация:
 #   1. settings.gaming.enable = true в hosts/<host>/settings.nix
@@ -12,7 +12,7 @@
 #
 # Если settings.gaming.enable = false (дефолт) — модуль no-op. Это позволяет
 # держать `imports = [ ../extras/gaming.nix ]` всегда подключённым, а
-# включать/выключать через settings без правки custom/<host>.nix.
+# включать/выключать через settings без правки hosts/<host>/extras-gaming.nix.
 #
 # Системные требования (включаются автоматически когда steam = true):
 #   - 32-bit OpenGL/Vulkan

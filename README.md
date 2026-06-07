@@ -90,7 +90,7 @@ passwd                                  # сменить дефолтный "nix
 
 ## ➕ Опционально через `extras/`
 
-Готовые тематические комплекты — подключаются одной строчкой в `custom/<host>.nix`
+Готовые тематические комплекты — подключаются одной строчкой в `hosts/<host>/default.nix` (или через готовый `extras-gaming.nix`/`extras-development.nix` в шаблоне)
 плюс параметризация через `settings.<имя>.*` (v0.3.0+):
 
 | Модуль | Что включает | Параметризация |
@@ -99,9 +99,9 @@ passwd                                  # сменить дефолтный "nix
 | `extras/development.nix` | Podman + docker-CLI alias, podman-compose, lazydocker, dive, docker-buildx | `settings.development.{enable,podman,podmanCompose,lazydocker}` |
 
 ```nix
-# custom/<host>.nix
+# hosts/<host>/extras-gaming.nix (уже в шаблоне)
 { ... }: {
-  imports = [ ../extras/gaming.nix ];
+  imports = [ ../../extras/gaming.nix ];
 }
 
 # hosts/<host>/settings.nix
@@ -131,7 +131,6 @@ nixos-config/
 ├── hosts/                     Per-machine конфиги
 │   └── _template/             Шаблон для нового хоста
 │
-├── custom/                    USER ZONE (твои правки, gitignored)
 ├── extras/                    Готовые «комплекты»
 ├── secrets/                   Зашифрованные секреты (sops-nix)
 └── docs/                      Документация
@@ -164,13 +163,13 @@ wofi, helix, bat, fish, GTK, Qt, mako, hyprlock, hyprland borders, обои.
 | Хочу… | Куда |
 |---|---|
 | Сменить тему/раскладку/cpu/железо | `hosts/<host>/settings.nix` |
-| Включить гейминг или дев-стек | `imports = [ ../extras/<...> ];` в `custom/<host>.nix` |
-| Установить системный пакет | `custom/<host>.nix` |
-| Установить пакет в свой $HOME | `custom/<host>.nix` через `home-manager.users.<u>.home.packages` |
+| Включить гейминг или дев-стек | раскомментируй `./extras-gaming.nix` в `hosts/<host>/default.nix` + `gaming.enable=true` |
+| Установить системный пакет | `hosts/<host>/packages.nix` |
+| Установить пакет в свой $HOME | `hosts/<host>/packages.nix` через `home-manager.users.<u>.home.packages` |
 | Сменить Hyprland бинд | `~/.config/hypr/user.conf` (live, без `nrs`!) |
 | Добавить fish-алиас | `~/.config/fish/conf.d/local.fish` (live!) |
 | Поменять обои | заменить `~/Pictures/wallpaper.png` |
-| Перетереть значение из `modules/` | `lib.mkForce` в `custom/<host>.nix` |
+| Перетереть значение из `modules/` | `lib.mkForce` в `hosts/<host>/overrides.nix` |
 
 ## 🛠 Алиасы fish
 
@@ -194,7 +193,7 @@ git pull upstream main    # подтянуть upstream
 nrs                       # применить
 ```
 
-Локальные правки (`settings.nix`, `hardware.nix`, `custom/`) **не в git** —
+Локальные правки (`hosts/<host>/*`) **не в git** —
 конфликтов при обновлении не бывает.
 
 Подробнее — `docs/UPDATING.md`.
@@ -224,16 +223,16 @@ nrs                       # применить
 3. **Безопасные обновления.** `git pull upstream main` никогда не задевает твоё —
    локальные файлы исключены из git через `.gitignore`.
 4. **Иммутабельный upstream, мутабельный custom.** `modules/` обновляется,
-   `custom/<host>` твоё, `~/.config/.../user.conf` mutable.
+   `hosts/<host>/` твоё, `~/.config/.../user.conf` mutable.
 5. **Settings > Custom > Extras > Mutable.** Параметризация через `settings.nix`,
-   обвязка через `custom/`, готовые комплекты через `extras/`, живые правки —
+   обвязка через `hosts/<host>/`, готовые комплекты через `extras/`, живые правки —
    через файлы в `$HOME`.
 
 ## 🤝 Для друзей
 
 Этот репо — мой пет-проект. Я делюсь им потому что он работает и выглядит
 так как я считаю правильным. Если тебе нравится — клонируй и пользуйся.
-Если хочешь что-то другое — кастомизируй через `custom/<host>.nix` или
+Если хочешь что-то другое — кастомизируй через `hosts/<host>/default.nix` или
 форкни и меняй у себя.
 
 Не стесняйся писать issue если что-то не работает на твоём железе или

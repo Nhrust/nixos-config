@@ -1,7 +1,7 @@
 # =============================================================================
-# custom/_examples/dotfiles/fish-local.fish — Декларативный fish-override
+# hosts/_template/dotfiles/fish-local.fish — Декларативный fish-override
 # =============================================================================
-# Если этот файл лежит в custom/<host>/dotfiles/fish-local.fish, он
+# Если этот файл лежит в hosts/<host>/dotfiles/fish-local.fish, он
 # симлинкается в ~/.config/fish/conf.d/local.fish (read-only из /nix/store).
 # Загружается fish'ем при старте — последние alias/функции/env побеждают.
 #
@@ -10,7 +10,7 @@
 # для алиасов.
 #
 # Чтобы активировать:
-#   1. cp -r custom/_examples custom/(hostname)
+#   1. cp -r hosts/_template hosts/(hostname)
 #   2. Отредактируй под себя
 #   3. nrs
 # =============================================================================
@@ -41,7 +41,7 @@
 # WARNING: ~/.config/fish/conf.d/local.fish (mutable вариант) НЕ уходит в git
 # благодаря .gitignore, но эта декларативная версия — В РЕПО.
 # Никогда не клади сюда настоящие токены! Используй sops для них (см.
-# custom/_examples/secrets-usage.nix).
+# hosts/_template/secrets-usage.nix).
 
 # ── PATH дополнения ──────────────────────────────────────────────────────────
 # fish_add_path ~/bin

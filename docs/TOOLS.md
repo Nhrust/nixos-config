@@ -169,7 +169,7 @@ lg
 
 Системно (доступна всем юзерам):
 ```nix
-# custom/<host>.nix
+# hosts/<host>/packages.nix (или services.nix)
 { pkgs, ... }: {
   environment.systemPackages = [ pkgs.discord ];
 }
@@ -177,7 +177,7 @@ lg
 
 Пользовательски (только в своём `$HOME`):
 ```nix
-# custom/<host>.nix
+# hosts/<host>/packages.nix (или services.nix)
 { pkgs, settings, ... }: {
   home-manager.users.${settings.username}.home.packages = [
     pkgs.spotify

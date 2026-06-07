@@ -137,7 +137,7 @@ sops secrets/default.yaml
 
 ## Использование секрета в Nix-модуле
 
-В любом модуле (например `custom/<host>.nix` или новом `extras/<foo>.nix`):
+В любом модуле (например `hosts/<host>/secrets-usage.nix` или другом из шаблона):
 
 ```nix
 { config, ... }: {
