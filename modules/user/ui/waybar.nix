@@ -1,7 +1,7 @@
 # =============================================================================
 # modules/user/ui/waybar.nix — Статус-бар + системные апплеты для трея
 # =============================================================================
-# style.css генерируется из style.css.in через pkgs.substituteAll
+# style.css генерируется из style.css.in через pkgs.replaceVars
 # с подстановкой Catppuccin палитры по settings.theme (v0.4.0+).
 # Базовые цвета модулей подключает catppuccin.autoEnable; здесь — только
 # фон карманов и powerprofile-индикатор.
@@ -12,8 +12,7 @@ let
   flavor  = if settings.theme == "light" then "latte" else "mocha";
   c       = palette.${flavor};
 
-  styleCSS = pkgs.substituteAll {
-    src      = ../dotfiles/waybar/style.css.in;
+  styleCSS = pkgs.replaceVars ../dotfiles/waybar/style.css.in {
     base_rgb = c.rgb.base;
     inherit (c.hex) peach lavender green;
   };

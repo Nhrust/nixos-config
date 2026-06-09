@@ -10,7 +10,7 @@
 #
 # hypridle.conf копируется ТОЛЬКО для laptop/desktop. На server демон не нужен.
 #
-# input.conf генерируется из input.conf.in через substituteAll — подставляется
+# input.conf генерируется из input.conf.in через pkgs.replaceVars — подставляется
 # settings.kbLayouts (новое в v0.2.0).
 #
 # Скрипты в scripts/ копируются как исполняемые.
@@ -37,9 +37,8 @@ let
   # Друзья с другим вторым языком переопределяют в своём settings.nix
   # (например "us,de" или просто "us").
   kbLayouts = settings.kbLayouts or "us,ru";
-  inputConf = pkgs.substituteAll {
-    src       = ../dotfiles/hyprland/conf/input.conf.in;
-    kbLayout  = kbLayouts;
+  inputConf = pkgs.replaceVars ../dotfiles/hyprland/conf/input.conf.in {
+    kbLayout = kbLayouts;
   };
 
   # ── hyprlock.conf генерируется из шаблона (v0.4.0+) ─────────────────────
@@ -48,8 +47,7 @@ let
   catppuccinPalette = import ../../../lib/catppuccin-colors.nix;
   flavor            = if settings.theme == "light" then "latte" else "mocha";
   c                 = catppuccinPalette.${flavor};
-  hyprlockConf      = pkgs.substituteAll {
-    src        = ../dotfiles/hyprland/hyprlock.conf.in;
+  hyprlockConf      = pkgs.replaceVars ../dotfiles/hyprland/hyprlock.conf.in {
     base_rgb   = c.rgb.base;
     text_rgb   = c.rgb.text;
     accent_rgb = c.rgb.${settings.themeAccent};

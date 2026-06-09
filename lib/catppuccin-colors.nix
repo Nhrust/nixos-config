@@ -1,7 +1,7 @@
 # =============================================================================
 # lib/catppuccin-colors.nix — Палитра Catppuccin для CSS/conf шаблонов
 # =============================================================================
-# Используется через pkgs.substituteAll для генерации theme-aware
+# Используется через pkgs.replaceVars для генерации theme-aware
 # конфигов (waybar/wofi/hyprlock) из *.in шаблонов.
 #
 # Использование:
@@ -11,8 +11,7 @@
 #     c       = palette.${flavor};
 #     accent  = settings.themeAccent;
 #   in
-#     pkgs.substituteAll {
-#       src        = ./style.css.in;
+#     pkgs.replaceVars ./style.css.in {
 #       base       = c.hex.base;
 #       base_rgb   = c.rgb.base;
 #       accent     = c.hex.${accent};
